@@ -1,0 +1,104 @@
+{% extends "base.html.twig" %}
+
+{% block title %} Casu'Hall - détail de l'article {% endblock %}
+
+{% block body %}
+
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12 col-md-6 text-center mt-3">
+            <img src="{{ vich_uploader_asset(articles, 'imageFile') }}" alt="Image de l'article" class="img-fluid mx-auto d-block" id="zoomImage" style="cursor: pointer;">
+        </div>
+
+        <!-- Bootstrap Modal for image zoom -->
+        <div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-xl">
+                <div class="modal-content bg-transparent border-0">
+                    <div class="modal-body p-0 position-relative">
+                        <img src="{{ vich_uploader_asset(articles, 'imageFile') }}" alt="Image de l'article zoomée" class="img-fluid mx-auto d-block">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-md-6 mt-4 mb-1">
+            <h4 class="text-uppercase fw-bold mb-2">{{ articles.nomArticle }}</h4>
+            
+            <hr>
+
+            <div class="align-items-center mb-2"> 
+                <h6 class="fw-bold me-2 text-uppercase">Prix</h6>
+                <h4 class="text-danger fw-bold">{{ articles.prix }} €</h4>
+            </div>
+            
+            <hr>
+            
+            <div class="align-items-center mb-2"> 
+                <h6 class="fw-bold me-2 text-uppercase">Description</h6>
+                <p class="text-justify">{{ articles.description }}</p>
+            </div>
+
+            <hr>
+            
+            <div class="d-flex align-items-center mb-2"> 
+                <h6 class="fw-bold me-2 text-uppercase">Taille</h6> 
+                <h6>{{ articles.taille }}</h6>
+            </div>
+            
+            <hr>
+
+            <div class="d-flex align-items-center mb-2"> 
+                <h6 class="fw-bold me-2 text-uppercase">Quantité en stock</h6> 
+                <h6> {{ articles.quantiteStock }}</h6>
+            </div>
+
+            <hr>
+
+            <div class="d-flex align-items-center mb-3"> 
+                <h6 class="fw-bold me-2 text-uppercase mt-2 me-4">Note</h6> 
+                
+                {% for i in range(1, articles.note) %}
+                    <img src="/assets/images/etoile_pleine.png" alt="etoile pleine" class="img-fluid ms-1">
+                {% endfor %}
+
+                {% set nbEtoile = 10 - articles.note %}
+
+                {% for i in range(1,nbEtoile) %}
+                    <img src="/assets/images/etoile_vide.png" alt="etoile vide" class="img-fluid ms-1">
+                {% endfor %}
+            </div>
+
+            <div class="d-flex align-items-center mb-3 mt-4">
+                <ul>
+                    {% for texte in textes %}
+                        <li>{{ texte }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <div class="mt-2 d-flex align-items-center justify-content-center">
+                <input type="button" class="btn btn-outline-dark me-2" value="Ajouter au panier">
+                {% if is_granted('IS_AUTHENTICATED_FULLY') %}
+                    {% for role in user.roles %}
+                        {% if role == "ROLE_ADMIN" %}
+                            <a href="{{  path('article.modifier', {'id': articles.id}) }}" class="btn btn-outline-dark me-2"> Modifier </a>
+                            <a href="{{  path('article.delete', {'id': articles.id}) }}" class="btn btn-outline-dark"> Supprimer </a>   
+                        {% endif %}
+                    {% endfor %}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    {% for message in app.flashes('success') %}
+        <div class="container d-flex align-items-center text-center justify-content-center mb-2 mt-3">
+            <div class="alert alert-dismissible alert-success">
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                {{ message }}
+            </div>
+        </div>
+    {% endfor %}
+
+</div>
+
+{% endblock %}

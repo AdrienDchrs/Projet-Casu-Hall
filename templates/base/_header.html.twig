@@ -1,0 +1,103 @@
+<nav class="navbar navbar-expand-lg bg-light justify-content-center mt-0">
+    <div class="container">
+        <a class="navbar-brand" href = "/"> <img src = "/assets/images/CasuHall.png" alt = "CasuHall Logo" width="100px" height="100px"> </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarColor04" aria-controls="navbarColor04" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"> </span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarColor04">
+            <ul class="navbar-nav me-auto">
+                <li class="liste-effect nav-item dropdown">
+                    <a class="nav-link dropdown-toggle mx-2" data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false"> Nos marques </a>
+                    <div class="dropdown-menu fade">
+                        {% if not marques is same as([]) %}
+                            {% for marque in marques %}
+                                <a id="menu-marques-{{ marque.idMarque }}" class="dropdown-item" href="{{  path('articles.articleMarque', {'id': marque.idMarque}) }}"> {{ marque.nomMarque }} </a>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                </li> 
+                <li class="liste-effect nav-item">
+                    <a class="nav-link mx-2" href="{{ path('home.notre-histoire') }}"> Notre histoire </a>
+                </li>
+                <li class="liste-effect nav-item dropdown">
+                    <a class="nav-link dropdown-toggle mx-2" data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false"> Catégories </a>
+                    <div class="dropdown-menu fade" id="categoryDropdown">
+                        <a class="dropdown-item" href="{{ path('articles.all')}}"> Tous nos articles </a>
+                        <div class="dropdown-divider"> </div>
+                        {% for categorie in categories %}
+                            <a id="menu-categorie-{{ categorie.idCategorie }}" class="dropdown-item" href="{{  path('articles.articleCategorie', {'id': categorie.idCategorie}) }}">{{ categorie.nomCategorie }}</a>
+                        {% endfor %}
+                    </div>
+                </li>
+                <li class="liste-effect nav-item">
+                        <a class="nav-link mx-2" href="{{ path('home.contact') }}"> Nous contacter </a>
+                </li>
+                {% if is_granted('IS_AUTHENTICATED_FULLY') %}
+                    {% for role in user.roles %}
+                        {% if role == "ROLE_ADMIN" %}
+                            <li class="liste-effect nav-item dropdown">
+                                <a class="nav-link dropdown-toggle mx-2" data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false"> Ajouter un élément au site </a>
+                                <div class="dropdown-menu fade">
+                                    <a class="dropdown-item" href="{{ path('home.ajouter-article') }}"> Ajouter un article </a>
+                                    <a class="dropdown-item" href="{{ path('home.ajouter-categorie') }}"> Ajouter une catégorie </a>
+                                    <a class="dropdown-item" href="{{ path('home.ajouter-marque') }}"> Ajouter une marque </a>
+                                </div>
+                            </li> 
+                        {% endif %}
+                    {% endfor %}
+                {% endif %}
+            </ul>
+            <!-- 
+            <form class="d-flex mx-4">
+                <input class="form-control custom-width" type="search" placeholder="Rechercher...">
+                <button class="btn my-2 my-sm-0 custom-click" type="submit">
+                    <img src = "/assets/images/loupe.png" alt="search">
+                </button> 
+            </form> -->
+
+            <div class="nav-item mx-2">
+                <a href = "#"> <img src= "/assets/images/panier.png" alt="panier" title="Mon panier"> </a> 
+            </div>
+
+            {% if app.user %}
+                <div class="nav-item mx-2">
+                    <a href = "{{  path('edition.compte', {'id': app.user.id}) }}"> <img src="/assets/images/connexion.png" alt="compte" title="Mon compte"> </a> 
+                </div>
+
+                <div class="nav-item mx-2">
+                    <a href = "{{ path('security.deconnexion') }}"> <img src="/assets/images/deconnexion.png" alt="deconnexion" title="Se déconnecter"> </a> 
+                </div>
+            {% else %}
+                <div class="nav-item mx-2">
+                    <a href = "{{ path('security.connexion') }}"> <img src="/assets/images/connexion.png" alt="connexion" title="Se connecter"> </a> 
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</nav>
+
+<div class="carousel slide" data-bs-ride="carousel">
+    <div class="carousel-inner">
+        {% set estConnecté = 0 %}
+        {% if app.user %}
+            {% set estConnecté = 1 %}
+            {% set sentences = ['Bienvenue ' ~ app.user.prenomUtilisateur] %}
+        {% else %}
+            {% set sentences = [] %}
+        {% endif %}
+
+        {% set sentences = sentences|merge(['Liberté pour les ultras !', 'Ventes de vêtements exclusivement sur le style casual.', 'Commandez dès maintenant !']) %}
+        {% set activeIndex = 0 %}
+
+        {% for i in range(0, sentences|length - 1) %}
+            {% set isActive = (i == activeIndex) %}
+            <div class="carousel-item {% if isActive %}active{% endif %}">
+                <div class="container-fluid bg-black d-flex align-items-center justify-content-center" id="{{ i }}">
+                    <img class="img-carrousel" src="/assets/images/CasuHall_WHITE.png">
+                    <h3 class="text-center text-white p-2 text-uppercase"> <i>{{ sentences[i] }}</i> </h3>
+                    <img class="img-carrousel" src="/assets/images/CasuHall_WHITE.png">
+                </div>
+            </div>
+        {% endfor %}
+    </div> 
+</div>  

@@ -1,0 +1,43 @@
+{% extends 'base.html.twig' %}
+
+{% block title %} Casu-Hall - Réinitialisation du mot de passe {% endblock %}
+
+{% block body %}
+    <div class= "align-items-center text-center"> 
+        <h4 class = "p-2 mt-3 text-uppercase fw-bold"> Réinitialiser mon mot de passe </h4>
+    </div>
+    <div class="container d-flex align-items-center mb-5 mt-3">
+        <div class="p-4 border border-black bg-light rounded mx-auto">
+            {{ form_start(resetForm) }}
+                <div class="row">
+                    {{ form_label(resetForm.plainPassword.first) }}
+                    {{ form_widget(resetForm.plainPassword.first) }}
+                </div>
+
+                <div class="row">
+                    {{ form_label(resetForm.plainPassword.second) }}
+                    {{ form_widget(resetForm.plainPassword.second) }}
+                </div>
+
+                <div class="form-check mt-1 mb-4">
+                    <input class="form-check-input" type="checkbox" id="flexCheckDefault" onClick="afficherMotDePasse('change_password_form_plainPassword_first','change_password_form_plainPassword_second')">
+                    <label class="form-check-label"> Visualiser le mot de passe </label> 
+                </div>
+
+                <div class="row mt-2">
+                    {{ form_widget(resetForm.submit) }}
+                </div>
+
+            {{ form_end(resetForm) }}
+        </div>
+    </div>
+
+    {% for flash_error in app.flashes('reset_password_error') %}
+        <div class="container d-flex align-items-center text-center justify-content-center mb-2 mt-2">
+            <div class="alert alert-dismissible alert-danger">
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                {{ flash_error }}
+            </div>
+        </div>
+    {% endfor %}
+{% endblock %}

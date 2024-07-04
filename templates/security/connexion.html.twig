@@ -1,0 +1,71 @@
+{% extends "base.html.twig" %}
+
+{% block title %} Casu'Hall - Connexion {% endblock %}
+
+{% block body %}
+    <div class= "align-items-center text-center"> 
+        <h4 class = "p-2 mt-3 text-uppercase fw-bold"> Connexion </h4>
+    </div>
+    <div class="container d-flex align-items-center mb-2 mt-3">
+        <div class="p-4 border border-black bg-light rounded mx-auto">
+            <form action="{{ path('security.connexion') }}" method="POST">
+                <div class="row">
+                    <label for="username" class="fw-bold mb-1"> Adresse e-mail : * </label>
+                    <input type="email" name="_username" id="_username" placeholder="exemple@gmail.com" required class="p-2 border rounded mb-2">
+                </div> 
+
+                <div class="row mt-2"> 
+                    <label for="password" id="password" class="fw-bold mb-1"> Mot de passe : *</label>
+                    <input type="password" name="_password" id="_password" placeholder="********" required class="p-2 border rounded mb-2">
+                </div>
+
+                <div class="form-check mt-1 mb-4">
+                    <input class="form-check-input" type="checkbox" id="flexCheckDefault" onClick="afficherMotDePasse('_password','_password')">
+                    <label class="form-check-label"> Visualiser le mot de passe </label> 
+                </div>
+
+                <div class="row">
+                    <button id="button" type="submit" class="btn btn-outline-dark"> Se connecter </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="row align-items-center text-center mt-4 mb-3">
+        <div class="col-md-6 text-end"> 
+            <a href="{{ path('security.inscription') }}" class="btn btn-outline-dark" role="button">Créer votre compte ici</a>
+        </div>
+        <div class="col-md-6 text-start"> 
+            <a href="{{ path('app_forgot_password_request') }}" class="btn btn-outline-dark" role="button">Mot de passe oublié ?</a>
+        </div>
+    </div>
+
+    {% if errors %}
+        <div class="container d-flex align-items-center text-center justify-content-center mb-2 mt-1">
+            <div class="alert alert-dismissible alert-danger">
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                Adresse e-mail ou mot de passe incorrect !
+            </div>
+        </div>
+    {% endif %}
+
+    {% for message in app.flashes('success') %}
+        <div class="container d-flex align-items-center text-center justify-content-center mb-2 mt-3">
+            <div class="alert alert-dismissible alert-success">
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                {{ message }}
+            </div>
+        </div>
+    {% endfor %}
+
+    <!-- Message de succès lors de la réinitialisation du mot de passe -->
+    {% for message in app.flashes('successPasswordReset') %}
+        <div class="container d-flex align-items-center text-center justify-content-center mb-2 mt-3">
+            <div class="alert alert-dismissible alert-success">
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                {{ message }}
+            </div>
+        </div>
+    {% endfor %}
+    
+{% endblock %}

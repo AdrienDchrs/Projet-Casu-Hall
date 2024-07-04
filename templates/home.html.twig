@@ -1,0 +1,40 @@
+{% extends "base.html.twig" %}
+
+{% block title %} Casu'Hall - Accueil {% endblock %}
+
+{% block body %}
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="image-container col-md-6">
+                <img src="/assets/images/image_0.jpeg" class="img-fluid" alt="Image de vêtements">
+            </div>
+            <div class="col-md-6 text-center mx-auto">
+                <h3 class="fw-bold">Parcourez nos derniers articles ! </h3>
+                <p>Chez Casu'Hall, vous retrouverez tous vos produits de seconde main à bas prix et 100% authentique. </p>
+                <div class=""> 
+                    <a href="{{ path('articles.all')}}"><button type="button" class="btn btn-outline-dark"> Cliquez ici pour découvrir nos articles ! </button> </a>
+                </div>
+            </div>
+        </div>
+        <div class="row align-items-center">
+            <div class="col-md-6 text-center mx-auto mb-2">
+                <h3 class="fw-bold"> Notre dernier stock de Sneakers </h3>
+                <p> Découvrez les Adidas Campus sur notre site. Légère, simple de coloris noir, nous sommes certains que ce produits ne fera pas faillite ! </p>
+                <a href="#"><button type="button" class="btn btn-outline-dark"> Cliquez ici pour découvrir la Adidas Campus ! </button> </a>
+            </div>
+            <div class="image-container col-md-6">
+                <img src="/assets/images/image_5.jpeg" class="img-fluid" alt="Adidas Campus">
+            </div> 
+        </div>
+        <div class="row align-items-center">
+            <div class="image-container col-md-6">
+                <img src="/assets/images/image_6.jpeg" class="img-fluid" alt="Image de vêtements">
+            </div>
+            <div class="col-md-6 text-center mx-auto">
+                <h3 class="fw-bold"> Lancé le 14/05/2024, Casu'Hall attire déjà le monde entier </h3>
+                <p> Premièrement apparu sur TikTok et Instagram, notre marque n'a pas tardé à se faire connaître. Il a fallu agir rapidement afin de proposer des produits qui ont peu de stocks, mais qui sont certains d'être écoulés !</p>
+                <p> Nous tenons à remercier tous nos collaborateurs, qui travaillent d'arrache-pied pour vous proposer les meilleurs articles. </p>
+            </div>
+        </div>
+    </div>
+{% endblock %}

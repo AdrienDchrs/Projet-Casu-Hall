@@ -1,0 +1,47 @@
+{% extends "base.html.twig" %}
+
+{% block title %} Casu'Hall - Contactez-nous {% endblock %}
+
+{% block body %} 
+    <div class = "align-items-center text-center"> 
+        <h4 class = "p-2 mt-3 text-uppercase fw-bold"> Contactez-nous par mail </h4>
+    </div>
+    <div class="container d-flex align-items-center mb-4 mt-3">
+        <div class="p-4 border border-black bg-light rounded mx-auto">
+            {{ form_start(form) }}
+                <div class="row mb-2">
+                    {% if app.user %}
+                        {{ form_label(form.emailContact)}}
+                        {{ form_widget(form.emailContact, { attr: { value: app.user.email, readonly: 'readonly' } }) }}
+                    {% else %}
+                        {{ form_label(form.emailContact)}}
+                        {{ form_widget(form.emailContact)}}
+                    {% endif %}
+                </div> 
+
+                <div class="row mb-2">
+                    {{ form_label(form.objet)}}
+                    {{ form_widget(form.objet)}}
+                </div> 
+
+                <div class="row mb-2"> 
+                    {{ form_label(form.commentaire)}}
+                    {{ form_widget(form.commentaire)}}
+                </div> 
+                
+                <div class="row">
+                    {{ form_widget(form.submit)}}
+                </div>
+            {{ form_end(form) }}
+        </div>
+    </div>
+
+    {% for message in app.flashes('successfull') %}
+        <div class="container d-flex align-items-center text-center justify-content-center mb-2 mt-3">
+            <div class="alert alert-dismissible alert-success">
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                {{ message }}
+            </div>
+        </div>
+    {% endfor %}
+{% endblock %}

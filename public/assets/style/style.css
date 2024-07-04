@@ -1,0 +1,55 @@
+/* Page -> header.html.twig, footer.html.twig */
+.image-container 
+{
+    position: relative;
+}
+
+.img-carrousel
+{
+    width:64px;
+}
+
+.nav-item 
+{
+    transition: width 1s ease;   
+}
+
+.nav-item img:hover
+{
+    transform: scale(1.1);
+}
+
+.liste-effect {
+    position: relative;
+    text-decoration: none;
+    color: black;
+}
+  
+.liste-effect::before {
+    content: "";
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    width: 0;
+    height: 1px; 
+    background-color: black;
+    transition: width 0.5s ease; 
+}
+
+.liste-effect:hover::before 
+{
+    width: 100%;
+}
+
+
+/* Page -> article.html.twig */
+.card {
+    transition: transform 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+
