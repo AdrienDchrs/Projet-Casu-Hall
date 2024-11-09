@@ -2,46 +2,50 @@
 
 namespace App\Controller;
 
-use App\Entity\Marque;
 use App\Entity\Article;
-use App\Form\MarqueType;
-use App\Entity\Categorie;
-use App\Form\ArticleType;
-use App\Form\CategorieType;
-use App\Repository\MarqueRepository;
-use App\Repository\CategorieRepository;
 use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\HttpFoundation\{Request,Response};
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-
+use App\Repository\{MarqueRepository,PanierRepository,CategorieRepository,ArticleFavoriRepository};
 
 class HomeController extends AbstractController
 {
     private MarqueRepository $repositoryMarque; 
+    private PanierRepository $repositoryPanier;
     private CategorieRepository $repositoryCategorie;
+    private ArticleFavoriRepository $repositoryArticleFavori;
 
     private EntityManagerInterface $manager;
 
     private array $marques; 
     private array $categories;
+    private array $articlesFavoris;
+    private array $articles;
+    private array $panier;
+
+    private array $emptyUserFavoris = [];
+    private array $emptyUserPanier  = [];
 
     /**
      * Constructeur de la classe
      *
      * @param MarqueRepository $repositoryMarque
      * @param CategorieRepository $repositoryCategorie
+     * @param RepositoryArticlesFavoris $repositoryArticlesFavoris
      * @param EntityManagerInterface $manager
+     * @param ArticleRepository $repositoryArticle
      */
-    public function __construct(MarqueRepository $repositoryMarque,CategorieRepository $repositoryCategorie, EntityManagerInterface $manager)
+    public function __construct(MarqueRepository $repositoryMarque,CategorieRepository $repositoryCategorie, EntityManagerInterface $manager, ArticleFavoriRepository $repositoryArticleFavori, PanierRepository $repositoryPanier)
     {
         $this->repositoryMarque = $repositoryMarque;
+        $this->repositoryPanier = $repositoryPanier;
         $this->repositoryCategorie = $repositoryCategorie;
+        $this->repositoryArticleFavori = $repositoryArticleFavori;
 
         $this->manager = $manager;
 
-        $this->marques = $this->repositoryMarque->findAll();
+        $this->marques = $this->repositoryMarque->findBy([], ['nomMarque' => 'ASC']);
         $this->categories = $this->repositoryCategorie->findAll();
     }
 
@@ -50,147 +54,28 @@ class HomeController extends AbstractController
      * @return Response
      */
     #[Route('/', 'home.index', methods: ['GET'])]
-    public function index(): Response
+    public function Index(Request $request): Response
     {
-        return $this->render('home.html.twig', ['marques' => $this->marques,
-                                                'categories' => $this->categories,
-                                                'user' => $this->getUser()]);
-    } 
+        $user = $this->getUser();
+        
+        $this->articlesFavoris = [];
+        $this->panier = [];
     
-    /**
-     * Contrôleur permettant à l'administrateur d'ajouter une marque dans sa boutique
-     * @param Request $request
-     * @return Response
-     */
-    #[Route('/ajouter-marque', 'home.ajouter-marque', methods:['GET', 'POST'])]
-    public function ajouterMarque(Request $request): Response
-    {
-        $marque = new Marque();
-        $form = $this->createForm(MarqueType::class, $marque);
-        $form->handleRequest($request);
-
-        if($form->isSubmitted() && $form->isValid())
+        if($user)
         {
-            $action = $form->get('action')->getData();
-
-            if($action === 'add')
-            {
-                $marque = $form->getData();
-                $this->addFlash('AddOrDeleteBrand', 'La marque a bien été ajoutée');
-                $this->manager->persist($marque);
-                $this->manager->flush();
-            }
-            else if($action === 'delete')
-            {
-                $idMarque = $this->repositoryMarque->findOneBy(['nomMarque' => $form->get('nomMarque')->getData()]);
-
-                if($idMarque !== null)
-                {
-                    $this->addFlash('AddOrDeleteBrand', 'La marque a bien été supprimée');
-                    $this->manager->remove($idMarque);
-                    $this->manager->flush();
-                }
-                else
-                {
-                    $this->addFlash('errorBrand', 'La marque n\'existe pas !');
-                }
-            }
-           
-            return $this->redirectToRoute('home.ajouter-marque', ['marques' =>  $this->marques,
-                                                                  'categories' =>  $this->categories]);
+            $this->articlesFavoris = $this->repositoryArticleFavori->findBy(['utilisateur' => $user]);
+            $this->panier = $this->repositoryPanier->findBy(['utilisateur' => $user]); 
         }
-        else if($form->isSubmitted() && !$form->isValid())
+        else 
         {
-            $this->addFlash('errorBrand', 'Erreur lors de l\'ajout de la marque');
+            $this->emptyUserFavoris = $this->getCookieUserNotConnected($request,'favoris',$this->emptyUserFavoris);
+            $this->emptyUserPanier = $this->getCookieUserNotConnected($request,'panier',$this->emptyUserPanier);  
         }
-
-        return $this->render('ajouter-marque.html.twig', ['marques' => $this->marques, 'categories' => $this->categories, 
-                                                          'user' => $this->getUser(),   'form' => $form->createView()]);
-    }
-
-    /**
-     * Contrôleur permettant à l'administrateur d'ajouter une catégorie dans sa boutique
-     * @param Request $request
-     * @return Response
-     */
-    #[Route('/ajouter-categorie', 'home.ajouter-categorie', methods:['GET', 'POST'])]
-    public function ajouterCatetorie(Request $request): Response
-    {
-        $categorie = new Categorie();
-        $form = $this->createForm(CategorieType::class, $categorie);
-        $form->handleRequest($request);
-
-        if($form->isSubmitted() && $form->isValid())
-        {
-            $action = $form->get('action')->getData();
-
-            if($action === 'add')
-            {
-                $categorie = $form->getData();
-                $this->addFlash('AddOrDeleteCategorie', 'La catégorie a bien été ajoutée');
-                $this->manager->persist($categorie);
-                $this->manager->flush();
-            }
-            else if($action === 'delete')
-            {
-                $idMarque = $this->repositoryCategorie->findOneBy(['nomCategorie' => $form->get('nomCategorie')->getData()]);
-
-                if($idMarque !== null)
-                {
-                    $this->addFlash('AddOrDeleteCategorie', 'La catégorie a bien été supprimée');
-                    $this->manager->remove($idMarque);
-                    $this->manager->flush();
-                }
-                else
-                {
-                    $this->addFlash('errorCategorie', 'La catégorie n\'existe pas !');
-                }
-            }
-           
-            return $this->redirectToRoute('home.ajouter-categorie', ['marques' =>  $this->marques,
-                                                         'categories' =>  $this->categories]);
-        }
-        else if($form->isSubmitted() && !$form->isValid())
-        {
-            $this->addFlash('errorBrand', 'Erreur lors de l\'ajout de la marque');
-        }
-
-        return $this->render('ajouter-categorie.html.twig', ['marques' => $this->marques, 'categories' => $this->categories, 
-                                                             'user' => $this->getUser(),  'form' => $form->createView()]);
-    }
-
-    /**
-     * Contrôleur permettant à l'administrateur d'ajouter un article dans sa boutique
-     *
-     * @param Request $request
-     * @return Response
-     */
-    #[Route('/ajouter-article', 'home.ajouter-article', methods:['GET', 'POST'])]
-    public function ajouterArticle(Request $request): Response
-    {
-        $article = new Article();
-        $form = $this->createForm(ArticleType::class, $article, ['marques' => $this->marques, 'categories' => $this->categories]);
-        $form->handleRequest($request);
-
-        if($form->isSubmitted() && $form->isValid())
-        {
-            $article = $form->getData();
-            
-            $this->addFlash('AddArticle', 'L\'article a bien été ajoutée !');
-
-            $this->manager->persist($article);
-            $this->manager->flush();
-
-            return $this->redirectToRoute('articles.all', ['marques' =>  $this->marques,
-                                                         'categories' =>  $this->categories]);
-        }
-        else if($form->isSubmitted() && !$form->isValid())
-        {
-            $this->addFlash('errorArticle', 'Erreur lors de l\'ajout de l\'article');
-        }
-
-        return $this->render('ajouter-article.html.twig', ['marques' => $this->marques, 'categories' => $this->categories, 
-                                                           'user' => $this->getUser(), 'form' => $form->createView()]); 
+    
+        
+        return $this->render('home.html.twig', ['marques' => $this->marques, 'categories' => $this->categories, 
+                                                'user' => $user,  'articlesFavoris' => $this->articlesFavoris,
+                                                'emptyUserFavoris' => $this->emptyUserFavoris, 'panier' => $this->panier, 'emptyUserPanier' => $this->emptyUserPanier]);
     }
 
     /**
@@ -198,10 +83,44 @@ class HomeController extends AbstractController
      * @return Response
      */
     #[Route('/notre-histoire', 'home.notre-histoire', methods:['GET', 'POST'])]
-    public function notreHistoire(): Response
+    public function OurHistory(Request $request): Response
     {
+        $user = $this->getUser();
+        $this->articlesFavoris = [];
+        $this->panier = [];
+
+        if($user)
+        {
+            $this->articlesFavoris = $this->repositoryArticleFavori->findBy(['utilisateur' => $user]);
+            $this->panier = $this->repositoryPanier->findBy(['utilisateur' => $user]);
+        }
+        else
+        {
+            $this->emptyUserFavoris = $this->getCookieUserNotConnected($request,'favoris',$this->emptyUserFavoris);
+            $this->emptyUserPanier = $this->getCookieUserNotConnected($request,'panier',$this->emptyUserPanier);  
+        }
+
         return $this->render('notre-histoire.html.twig', ['marques' => $this->marques, 'categories' => $this->categories,
-                                                          'user' => $this->getUser()]);
+                                                          'user' => $this->getUser(), 'articlesFavoris' => $this->articlesFavoris, 'panier' => $this->panier, 
+                                                          'emptyUserFavoris' => $this->emptyUserFavoris, 'emptyUserPanier' => $this->emptyUserPanier]);
+    }
+
+     /** 
+     * Fonction privée qui permet de récupérer les favoris d'un utilisateur non connecté
+     * @param Request sert à établir une requête HTTP pour récupérer les cookies de la session.
+     * @param cookieName adapte la récupération de cookie en fonction du nom donné à la création
+     * @param array pour inclure tous les cookie dans not
+     */
+    private function getCookieUserNotConnected(Request $request, $cookieName, $array)
+    {
+        $cookie = json_decode($request->cookies->get($cookieName, '[]'), true);
+            
+        if(!empty($cookie))
+            $array = $this->manager->getRepository(Article::class)->findBy(['id' => $cookie]);
+        else 
+            $array = [];
+
+        return $array; 
     }
 }
 ?> 

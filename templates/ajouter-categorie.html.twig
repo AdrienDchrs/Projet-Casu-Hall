@@ -3,11 +3,21 @@
 {% block title %} Casu'Hall - Ajouter une catégorie {% endblock %}
 
 {% block body %}
-    <div class = "text-center"> 
-        <h4 class = "p-2 mt-5 text-uppercase fw-bold"> Ajouter une catégorie </h4>
-    </div>
+     {% set alertTypes = {'success': 'success', 'warning': 'warning', 'error': 'danger'} %}
+    {% for type, cssClass in alertTypes %}
+        {% for message in app.flashes(type) %}
+            <div class="container-fluid d-flex align-items-center text-center justify-content-center mb-2 mt-3">
+                <div class="alert alert-dismissible alert-{{ cssClass }} text-center" data-alert>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    {{ message }}
+                </div>
+            </div>
+        {% endfor %}
+    {% endfor %}
+    
+    <h4 class = "p-2 mt-3 text-uppercase fw-bold text-center"> Ajouter une catégorie </h4>
     <div class="container d-flex align-items-center mb-4 mt-5">
-        <div class="p-4 border border-black bg-light rounded mx-auto">
+        <div class="p-4 border border-black bg-light rounded mx-auto mb-4 shadow shadow-lg">
             {{ form_start(form) }}
                 {{ form_widget(form.action) }}
                 <div class="row mb-2">
@@ -23,22 +33,4 @@
             {{ form_end(form) }}
         </div>
     </div>
-
-        {% for message in app.flashes('AddOrDeleteCategorie') %}
-            <div class="container d-flex align-items-center text-center justify-content-center mb-2 mt-3">
-                <div class="alert alert-dismissible alert-success">
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    {{ message }}
-                </div>
-            </div>
-        {% endfor %}
-
-        {% for message in app.flashes('errorCategorie') %}
-            <div class="container d-flex align-items-center text-center justify-content-center mb-2 mt-3">
-                <div class="alert alert-dismissible alert-danger">
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    {{ message }}
-                </div>
-            </div>
-        {% endfor %}
 {% endblock %}

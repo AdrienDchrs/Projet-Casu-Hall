@@ -7,7 +7,7 @@
         <h4 class = "p-2 mt-3 text-uppercase fw-bold"> Connexion </h4>
     </div>
     <div class="container d-flex align-items-center mb-2 mt-3">
-        <div class="p-4 border border-black bg-light rounded mx-auto">
+        <div class="p-4 border border-black bg-light rounded mx-auto shadow shadow-lg">
             <form action="{{ path('security.connexion') }}" method="POST">
                 <div class="row">
                     <label for="username" class="fw-bold mb-1"> Adresse e-mail : * </label>
@@ -33,39 +33,31 @@
 
     <div class="row align-items-center text-center mt-4 mb-3">
         <div class="col-md-6 text-end"> 
-            <a href="{{ path('security.inscription') }}" class="btn btn-outline-dark" role="button">Créer votre compte ici</a>
+            <a href="{{ path('security.inscription') }}" class="btn btn-outline-dark shadow shadow-lg" role="button">Créer votre compte ici.</a>
         </div>
-        <div class="col-md-6 text-start"> 
-            <a href="{{ path('app_forgot_password_request') }}" class="btn btn-outline-dark" role="button">Mot de passe oublié ?</a>
+        <div class="col-md-6 text-start">
+            <a href="{{ path('app_forgot_password_request') }}" class="btn btn-outline-dark shadow shadow-lg" role="button">Mot de passe oublié ?</a>
         </div>
-    </div>
+    </div>    
 
     {% if errors %}
-        <div class="container d-flex align-items-center text-center justify-content-center mb-2 mt-1">
-            <div class="alert alert-dismissible alert-danger">
+        <div class="container d-flex align-items-center text-center justify-content-center mb-2 mt-3">
+            <div class="alert alert-dismissible alert-danger" data-alert>
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 Adresse e-mail ou mot de passe incorrect !
             </div>
         </div>
     {% endif %}
 
-    {% for message in app.flashes('success') %}
-        <div class="container d-flex align-items-center text-center justify-content-center mb-2 mt-3">
-            <div class="alert alert-dismissible alert-success">
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                {{ message }}
+    {% set alertTypes = {'success': 'success', 'warning': 'warning', 'error': 'danger'} %}
+    {% for type, cssClass in alertTypes %}
+        {% for message in app.flashes(type) %}
+            <div class="container-fluid d-flex align-items-center text-center justify-content-center mb-2 mt-3">
+                <div class="alert alert-dismissible alert-{{ cssClass }} text-center" data-alert>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    {{ message }}
+                </div>
             </div>
-        </div>
+        {% endfor %}
     {% endfor %}
-
-    <!-- Message de succès lors de la réinitialisation du mot de passe -->
-    {% for message in app.flashes('successPasswordReset') %}
-        <div class="container d-flex align-items-center text-center justify-content-center mb-2 mt-3">
-            <div class="alert alert-dismissible alert-success">
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                {{ message }}
-            </div>
-        </div>
-    {% endfor %}
-    
 {% endblock %}

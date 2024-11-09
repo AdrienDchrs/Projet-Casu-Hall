@@ -28,19 +28,6 @@ class AppFixtures extends Fixture
      */
     public function load(ObjectManager $manager): void
     {
-        for($i = 0; $i < 100; $i++)
-        {
-            $article = new Article();
-            $article->setNomArticle($this->faker->sentence(5));
-            $article->setPrix($this->faker->randomFloat(2, 0, 100));
-            $article->setTaille($this->faker->randomElement(['XS', 'S', 'M', 'L', 'XL']));
-            $article->setQuantiteStock($this->faker->numberBetween(0, 20));
-            $article->setDescription($this->faker->paragraph(3));
-            $article->setNote($this->faker->numberBetween(1, 10));
-            $article->setImageName($this->faker->imageUrl(640, 480, 'clothes'));
-
-            $manager->persist($article);
-            $manager->flush();
-        } 
+        // TODO IF NECESSARY
     }
 }

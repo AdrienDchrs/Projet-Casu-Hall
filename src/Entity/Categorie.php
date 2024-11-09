@@ -10,8 +10,8 @@ use Symfony\Component\Validator\Constraints as Assert;
 class Categorie
 {
     #[ORM\Id]
-    #[ORM\Column(type: 'integer')]
     #[ORM\GeneratedValue]
+    #[ORM\Column(type: 'integer')]
     private ?int $idCategorie = null;
 
     #[Assert\NotNull()]
@@ -22,8 +22,6 @@ class Categorie
 
     /**
      * Getters et Setters
-     *
-     * @return integer|null
      */
     public function getIdCategorie(): ?int      {    return $this->idCategorie;  }
     public function getNomCategorie(): ?string  {    return $this->nomCategorie; }

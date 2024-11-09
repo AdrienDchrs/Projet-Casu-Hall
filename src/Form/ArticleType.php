@@ -2,20 +2,12 @@
 
 namespace App\Form;
 
-use App\Entity\Marque;
-use App\Entity\Article;
-use App\Entity\Categorie;
-use Symfony\Component\Form\AbstractType;
-use Symfony\Component\Form\FormBuilderInterface;
+use App\Entity\{Marque,Article,Categorie};
+use Vich\UploaderBundle\Form\Type\VichImageType;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Validator\Constraints as Assert;
-use Symfony\Component\Form\Extension\Core\Type\TextType;
-use Symfony\Component\Form\Extension\Core\Type\SubmitType;
-use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
-use Symfony\Component\Form\Extension\Core\Type\NumberType;
-use Symfony\Component\Form\Extension\Core\Type\IntegerType;
-use Symfony\Component\Form\Extension\Core\Type\TextareaType;
-use Vich\UploaderBundle\Form\Type\VichImageType;
+use Symfony\Component\Form\{AbstractType,FormBuilderInterface};
+use Symfony\Component\Form\Extension\Core\Type\{TextType,SubmitType,ChoiceType,NumberType,IntegerType,TextareaType};
 
 class ArticleType extends AbstractType
 {
@@ -144,6 +136,7 @@ class ArticleType extends AbstractType
                 ],
                 'download_uri' => false,
                 'image_uri' => false,
+                'imagine_pattern' => 'large',
                 'delete_label' => false,
                 'allow_delete' => false,
                 'constraints'   => [
@@ -157,7 +150,7 @@ class ArticleType extends AbstractType
                     'id' => 'note',
                     'class' => 'form-control',
                     'min' => '1',
-                    'max' => '10'
+                    'max' => '5'
                 ],
                 'label' => 'Note de l\'article : *',
                 'label_attr' => [
@@ -166,7 +159,7 @@ class ArticleType extends AbstractType
                     'for' => 'note',
                 ],
                 'constraints'   => [
-                    new Assert\Length(['min' => 1, 'max' => 10]),
+                    new Assert\Length(['min' => 1, 'max' => 5]),
                     new Assert\NotBlank(),
                     new Assert\NotNull()
                 ]
@@ -221,7 +214,7 @@ class ArticleType extends AbstractType
             ])
             ->add('addArticle', SubmitType::class, [
                 'label' => 'Ajouter l\'article', 
-                'attr' => ['class' => 'btn btn-outline-dark']
+                'attr' => ['class' => 'btn btn-outline-success']
             ]);
     }
 

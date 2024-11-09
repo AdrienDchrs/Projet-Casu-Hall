@@ -3,37 +3,41 @@
 {% block title %} Casu'Hall - Accueil {% endblock %}
 
 {% block body %}
-    <div class="container">
+    <div id="scroll-container" class="scroll-container container-full">
         <div class="row align-items-center">
-            <div class="image-container col-md-6">
-                <img src="/assets/images/image_0.jpeg" class="img-fluid" alt="Image de vêtements">
+            <div class="image-container col-md-6 mt-1">
+                <img src="/assets/images/image_0.jpeg" class="img-fluid shadow shadow-lg" alt="Image de vêtements">
             </div>
             <div class="col-md-6 text-center mx-auto">
-                <h3 class="fw-bold">Parcourez nos derniers articles ! </h3>
-                <p>Chez Casu'Hall, vous retrouverez tous vos produits de seconde main à bas prix et 100% authentique. </p>
-                <div class=""> 
-                    <a href="{{ path('articles.all')}}"><button type="button" class="btn btn-outline-dark"> Cliquez ici pour découvrir nos articles ! </button> </a>
-                </div>
+                <h3 class="fw-bold mb-5"> À travers un site simple et ergonomique, profitez d'une expérience utilisateur satisfaisante. </h3>
+                <hr class="d-flex w-50 mx-auto">
+                <p class="fs-5 mb-5">Explorez notre site pensé pour vous : simplicité, fluidité et style au rendez-vous ! Parcourez nos collections avec une expérience utilisateur 
+                                     intuitive et agréable, conçue pour vous faire gagner du temps tout en restant inspiré. Votre style, votre confort, votre site. </p>
             </div>
         </div>
         <div class="row align-items-center">
-            <div class="col-md-6 text-center mx-auto mb-2">
-                <h3 class="fw-bold"> Notre dernier stock de Sneakers </h3>
-                <p> Découvrez les Adidas Campus sur notre site. Légère, simple de coloris noir, nous sommes certains que ce produits ne fera pas faillite ! </p>
-                <a href="#"><button type="button" class="btn btn-outline-dark"> Cliquez ici pour découvrir la Adidas Campus ! </button> </a>
+            <div class="col-md-6 text-center mx-auto">
+                <h3 class="fw-bold mb-5"> Notre dernier stock de vêtements </h3>
+                <hr class="d-flex w-50 mx-auto">
+                <p class="fs-5 mb-5"> Ne manquez surtout pas notre dernier arrivage de vêtements casuals. Découvrez des pièces exclusives en édition limitée et faites vite, les stocks sont réduits !</p>
+                <a href="{{ path('articles.all')}}">
+                    <button type="button" class="btn btn-outline-dark"> Cliquez ici pour découvrir nos articles ! </button> 
+                </a>
             </div>
             <div class="image-container col-md-6">
-                <img src="/assets/images/image_5.jpeg" class="img-fluid" alt="Adidas Campus">
+                <img src="/assets/images/image_2.jpeg" class="img-fluid shadow shadow-lg" alt="Some clothers">
             </div> 
         </div>
-        <div class="row align-items-center">
+        <div class="row align-items-center mb-1">
             <div class="image-container col-md-6">
-                <img src="/assets/images/image_6.jpeg" class="img-fluid" alt="Image de vêtements">
+                <img src="/assets/images/image_6.jpeg" class="img-fluid shadow shadow-lg" alt="Image de vêtements">
             </div>
             <div class="col-md-6 text-center mx-auto">
-                <h3 class="fw-bold"> Lancé le 14/05/2024, Casu'Hall attire déjà le monde entier </h3>
-                <p> Premièrement apparu sur TikTok et Instagram, notre marque n'a pas tardé à se faire connaître. Il a fallu agir rapidement afin de proposer des produits qui ont peu de stocks, mais qui sont certains d'être écoulés !</p>
-                <p> Nous tenons à remercier tous nos collaborateurs, qui travaillent d'arrache-pied pour vous proposer les meilleurs articles. </p>
+                <h3 class="fw-bold mb-5"> Lancé le 14 Mai 2024, Casu'Hall attire déjà toute l'Europe </h3>
+                <hr class="d-flex w-50 mx-auto">
+                <p class="fs-5 mb-5"> Premièrement apparu sur TikTok et Instagram, notre boutique n'a pas tardé à se faire connaître. Il a fallu agir rapidement afin de proposer des 
+                                      produits qui ont peu de stocks, mais qui sont certains d'être écoulés ! Nous tenons à remercier tous nos collaborateurs, qui travaillent d'arrache-pied 
+                                      pour vous proposer les meilleurs articles. </p>
             </div>
         </div>
     </div>

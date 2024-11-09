@@ -1,3 +1,19 @@
+/* Classe utilisée pour les icônes */ 
+.material-symbols-outlined 
+{
+    font-variation-settings: 
+    'FILL' 1, 
+    'wght' 700, 
+    'GRAD' 0, 
+    'opsz' 48;
+
+    font-size: 32px;
+    padding: 1px;
+    justify-content: center;
+    align-items: center;
+    display: flex;
+}
+
 /* Page -> header.html.twig, footer.html.twig */
 .image-container 
 {
@@ -41,7 +57,6 @@
     width: 100%;
 }
 
-
 /* Page -> article.html.twig */
 .card {
     transition: transform 0.3s ease;
@@ -53,3 +68,9 @@
 }
 
 
+/* Page -> articles-favoris.html.twig */ 
+.img-favori
+{
+    width: 280px; 
+    height: 180px;
+}

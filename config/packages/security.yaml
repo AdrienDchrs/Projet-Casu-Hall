@@ -19,6 +19,7 @@ security:
             form_login:
                 login_path: security.connexion
                 check_path: security.connexion
+                default_target_path: post_connexion
             logout:
                 path: security.deconnexion
             

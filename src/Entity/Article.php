@@ -28,7 +28,6 @@ class Article
     #[ORM\Column]
     #[Assert\NotNull()]
     #[Assert\NotBlank()]
-    #[Assert\Length(min: 0)]
     #[Assert\PositiveOrZero()]
     private ?float $prix = null;
 
@@ -41,7 +40,6 @@ class Article
     #[ORM\Column]
     #[Assert\NotNull()]
     #[Assert\NotBlank()]
-    #[Assert\Length(min: 0)]
     #[Assert\PositiveOrZero()]
     private ?int $quantite_stock = null;
 
@@ -72,8 +70,7 @@ class Article
     #[ORM\ManyToOne(targetEntity: Marque::class)]    
     #[ORM\JoinColumn(name: 'id_marque', referencedColumnName: 'id_marque', nullable: false)]
     private ?Marque $idMarque = null;
-
-
+    
     /**
      * Getters et Setters
      */

@@ -2,17 +2,15 @@
 
 namespace App\Controller;
 
-use App\Entity\Utilisateur;
 use App\Form\InscriptionType;
-use App\Repository\MarqueRepository;
-use App\Repository\CategorieRepository;
 use Doctrine\ORM\EntityManagerInterface;
-use App\Repository\UtilisateurRepository;
-use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Security\Core\Security;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\HttpFoundation\{Request,Response};
+use App\Entity\{Panier,Article,Utilisateur,ArticleFavori};
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Security\Http\Authentication\AuthenticationUtils;
+use App\Repository\{MarqueRepository,CategorieRepository,UtilisateurRepository};
 
 class SecurityController extends AbstractController
 {
@@ -20,24 +18,30 @@ class SecurityController extends AbstractController
     private CategorieRepository $repositoryCategorie;
     private UtilisateurRepository $repositoryUtilisateur;
 
-
     private array $marques; 
     private array $categories;
+
+    private array $emptyUserFavoris = [];
+    private array $emptyUserPanier = [];
+
+    private EntityManagerInterface $manager;
 
     /**
      * Constructeur de la classe
      * @param MarqueRepository $repositoryMarque
      * @param CategorieRepository $repositoryCategorie
-     * @param UtilisateurRepository $repositoryUtilisateur
+     * @param UtilisateurRepository $repositoryUtilisaeur
      */
-    public function __construct(MarqueRepository $repositoryMarque,CategorieRepository $repositoryCategorie,UtilisateurRepository $repositoryUtilisateur)
+    public function __construct(MarqueRepository $repositoryMarque,CategorieRepository $repositoryCategorie,UtilisateurRepository $repositoryUtilisateur, EntityManagerInterface $manager)
     {
         $this->repositoryMarque         = $repositoryMarque;
         $this->repositoryCategorie      = $repositoryCategorie;
         $this->repositoryUtilisateur    = $repositoryUtilisateur;
 
-        $this->marques = $this->repositoryMarque->findAll();
+        $this->marques = $this->repositoryMarque->findBy([], ['nomMarque' => 'ASC']);
         $this->categories = $this->repositoryCategorie->findAll();
+
+        $this->manager = $manager;
     }
 
     /**
@@ -46,13 +50,87 @@ class SecurityController extends AbstractController
      * @return Response
      */
     #[Route('/connexion', 'security.connexion', methods:['GET', 'POST'])]
-    public function connexion(AuthenticationUtils $authenticationUtils): Response
+    public function connexion(Request $request, AuthenticationUtils $authenticationUtils): Response
     {
+        $this->emptyUserFavoris = $this->getCookieUserNotConnected($request,'favoris',$this->emptyUserFavoris);
+        $this->emptyUserPanier  = $this->getCookieUserNotConnected($request,'panier',$this->emptyUserPanier);
 
-        return $this->render('security/connexion.html.twig', ['marques' => $this->marques,
-                                                     'categories' => $this->categories, 
-                                                     'errors' => $authenticationUtils->getLastAuthenticationError()]);
+        if ($this->getUser()) 
+            return $this->redirectToRoute('post_connexion');
+        
+        return $this->render('security/connexion.html.twig', ['marques' => $this->marques,'categories' => $this->categories, 
+                                                              'errors' => $authenticationUtils->getLastAuthenticationError(), 
+                                                              'emptyUserFavoris' => $this->emptyUserFavoris, 'emptyUserPanier' => $this->emptyUserPanier]);
     }
+
+    #[Security('is_granted("ROLE_USER") or is_granted("ROLE_ADMIN")')]
+    #[Route('/post-connexion', name: 'post_connexion', methods: ['GET', 'POST'])]
+    public function PostConnexion(Request $request): Response
+    {
+        $user = $this->getUser();
+        
+        if($user) 
+        {
+            $cookie = json_decode($request->cookies->get('favoris', '[]'), true);
+                
+            if (!empty($cookie)) 
+            {
+                $this->emptyUserFavoris = $this->manager->getRepository(Article::class)->findBy(['id' => $cookie]);
+
+                $arrayExist = $this->manager->getRepository(ArticleFavori::class)->findBy(['article' => $cookie, 'utilisateur' => $user]);
+
+                if(empty($arrayExist))
+                {
+                    foreach ($this->emptyUserFavoris as $article) 
+                    {
+                        $object = new ArticleFavori();
+                        $object->setUtilisateur($this->getUser());
+                        $object->setArticle($article);
+                
+                        $this->manager->persist($object);
+                    }
+                    $this->manager->flush(); 
+                }
+                
+                $response = $this->redirectToRoute('post_connexion');
+                $response->headers->clearCookie('favoris', '/', null);
+                    
+                return $response;
+            }
+
+            $cookie = json_decode($request->cookies->get('panier', '[]'), true);
+                
+            if (!empty($cookie)) 
+            {
+                $this->emptyUserPanier = $this->manager->getRepository(Article::class)->findBy(['id' => $cookie]);
+
+                $arrayExist = $this->manager->getRepository(Panier::class)->findBy(['article' => $cookie, 'utilisateur' => $user]);
+
+                if(empty($arrayExist))
+                {
+                    foreach ($this->emptyUserPanier as $article) 
+                    {
+                        $object = new Panier();
+                        $object->setPrix($article->getPrix());
+                        $object->setQuantite(1);
+                        $object->setIsDone(0);
+                        $object->setUtilisateur($user);
+                        $object->setArticle($article);
+
+                
+                        $this->manager->persist($object);
+                    }
+                    $this->manager->flush(); 
+                }
+               
+                $response = $this->redirectToRoute('home.index');
+                $response->headers->clearCookie('panier', '/', null);
+                return $response;
+            }
+        }          
+        return $this->redirectToRoute('home.index');
+    }
+
 
     /**
      * Contrôleur permettant de gérer la déconnexion
@@ -74,8 +152,11 @@ class SecurityController extends AbstractController
      * @return Response
      */
     #[Route('/inscription', 'security.inscription', methods:['GET', 'POST'])]
-    public function inscription(Request $request, EntityManagerInterface $manager): Response
+    public function Inscription(Request $request, EntityManagerInterface $manager): Response
     {
+        $this->emptyUserFavoris = $this->getCookieUserNotConnected($request,'favoris',$this->emptyUserFavoris);
+        $this->emptyUserPanier  = $this->getCookieUserNotConnected($request,'panier',$this->emptyUserPanier);
+
         $user = new Utilisateur(); 
         $form = $this->createForm(InscriptionType::class, $user);
         $form->handleRequest($request);
@@ -95,7 +176,8 @@ class SecurityController extends AbstractController
 
             $this->addFlash('success', 'Inscription avec succès !');
 
-            return $this->redirectToRoute('security.connexion', ['marques' =>  $this->marques, 'categories' =>  $this->categories]);
+            return $this->redirectToRoute('security.connexion', ['marques' =>  $this->marques, 'categories' =>  $this->categories, 'emptyUserFavoris' => $this->emptyUserFavoris,
+                                                                 'emptyUserPanier' => $this->emptyUserPanier]);
         }
         else if($form->isSubmitted() && !$form->isValid()) 
         {
@@ -104,16 +186,30 @@ class SecurityController extends AbstractController
             $adresseExistante = $this->repositoryUtilisateur->findBy(['email' => $mail]);
 
             if($adresseExistante)
-            {
                 $this->addFlash('erreur', 'Vous avez déjà un compte !');
-            }
             else
-            {
                 $this->addFlash('erreur', 'Erreur lors de l\'inscription ! Veuillez réessayer.');
-            }
         }
 
-        return $this->render('security/inscription.html.twig', ['marques' =>  $this->marques, 'categories' =>  $this->categories, 'form' => $form->createView()]);
+        return $this->render('security/inscription.html.twig', ['marques' =>  $this->marques, 'categories' =>  $this->categories, 'form' => $form->createView(), 
+                                                                'emptyUserFavoris' => $this->emptyUserFavoris, 'emptyUserPanier' => $this->emptyUserPanier]);
+    }
+
+    /** 
+     * Fonction privée qui permet de récupérer les favoris d'un utilisateur non connecté
+     * @param Request $request sert à établir une requête HTTP pour récupérer les cookies de la session.
+     */
+    private function getCookieUserNotConnected(Request $request, $cookieName, $array)
+    {
+
+        $cookie = json_decode($request->cookies->get($cookieName, '[]'), true);
+            
+        if(!empty($cookie))
+            $array = $this->manager->getRepository(Article::class)->findBy(['id' => $cookie]);
+        else 
+            $array = [];
+
+        return $array; 
     }
 }
 

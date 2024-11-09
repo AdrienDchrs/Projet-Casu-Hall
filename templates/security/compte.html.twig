@@ -3,22 +3,16 @@
 {% block title %} Casu'Hall - Mon compte {% endblock %}
 
 {% block body %}
-    {% for message in app.flashes('success') %}
-        <div class="container d-flex align-items-center text-center justify-content-center mb-1 mt-3">
-            <div class="alert alert-dismissible alert-success">
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                {{ message }}
+     {% set alertTypes = {'success': 'success', 'warning': 'warning', 'error': 'danger'} %}
+    {% for type, cssClass in alertTypes %}
+        {% for message in app.flashes(type) %}
+            <div class="container-fluid d-flex align-items-center text-center justify-content-center mb-2 mt-3">
+                <div class="alert alert-dismissible alert-{{ cssClass }} text-center" data-alert>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    {{ message }}
+                </div>
             </div>
-        </div>
-    {% endfor %}
-    
-    {% for message in app.flashes('danger') %}
-        <div class="container d-flex align-items-center text-center justify-content-center mb-2 mt-3">
-            <div class="alert alert-dismissible alert-danger">
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                {{ message }}
-            </div>
-        </div>
+        {% endfor %}
     {% endfor %}
     
     <div class="text-center"> 
@@ -26,7 +20,7 @@
     </div>
     {{ form_start(form)}}
         {{ form_widget(form.action) }}
-        <div class="container border rounded mt-4">
+        <div class="container border rounded mt-4 shadow shadow-lg">
             <div class="d-flex align-items-center">
                 <h5 class="p-2 mt-3 text-uppercase fw-bold">Informations générales</h5>
                 <img src="/assets/images/identite.png" class="ms-3 mt-2" alt="identite"> 
@@ -36,11 +30,7 @@
                     <label for="prenomUtilisateur"> Civilité </label>
                 </div>
                 <div class="col-md-4">
-                    {% if user.civilite %}
-                        {% set genre = 'Monsieur' %}
-                    {% else %}
-                        {% set genre = 'Madame' %}
-                    {% endif %}
+                    {% set genre = user.civilite ? "Monsieur" : "Madame" %}
 
                     <input type="text" class="w-100 p-1" value="{{ genre }} " readonly>
                 </div>
@@ -54,13 +44,13 @@
                 <div class="col-md-6 mt-2">
                     <label for="dateNaissance"> Date de naissance </label>
                 </div>
-                <div class="col-md-4 mt-2 position-relative">
+                <div class="col-md-4 mt-2 mb-3 position-relative">
                     <input type="date" class="w-100 p-1 pe-5" value="{{ user.dateNaissance|date('Y-m-d') }}" readonly>
                     <img src="/assets/images/calendrier.png" alt="calendrier" class="position-absolute top-50 end-0 translate-middle-y me-3 icon-calendar">
                 </div>
             </div>
         </div>
-        <div class="container border rounded mt-4">
+        <div class="container border rounded mt-4 shadow shadow-lg">
             <div class="d-flex align-items-center">
                 <h5 class = "p-2 mt-3 text-uppercase fw-bold"> Coordonnées </h5>
                 <img src="/assets/images/coordonnees.png" class="ms-3" alt="coordonnees">
@@ -87,7 +77,7 @@
             </div>
         </div>
 
-        <div class="container border rounded mt-4 mb-4">
+        <div class="container border rounded mt-4 mb-4 shadow shadow-lg">
             <div class="d-flex align-items-center">
                 <h5 class="p-2 mt-3 text-uppercase fw-bold"> Changer le mot de passe </h5>
                 <img src="/assets/images/password.png" class="ms-3" alt="password">
@@ -122,7 +112,12 @@
         </div>
     {{ form_end(form) }}
 
-    <div class="container border rounded mt-4 mb-4">
+    <div class="container border rounded mt-4 mb-4 shadow shadow-lg">
         <h5 class = "p-2 mt-3 text-uppercase fw-bold"> Mes commandes </h5>
+        {# {% if panier|length > 0 %}
+            <!-- à remplir pour les commandes effectuées sur ce compte et cet utilisateur -->
+        {% else %} #}
+            <p> Aucunes commandes passées chez nous pour le moment. </p>
+        {# {% endif %} #} 
     </div>
 {% endblock %}

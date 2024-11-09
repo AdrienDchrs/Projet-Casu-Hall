@@ -11,8 +11,8 @@ use Symfony\Component\Validator\Constraints as Assert;
 class Contact
 {
     #[ORM\Id]
-    #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[ORM\GeneratedValue]
     private ?int $idContact = null;
 
     #[Assert\NotNull()]
@@ -27,9 +27,9 @@ class Contact
     #[Assert\Length(min: 1, max:100)]
     private ?string $objet = null;
 
+    #[ORM\Column]
     #[Assert\NotNull()]
     #[Assert\NotBlank()]
-    #[ORM\Column]
     #[Assert\Length(min: 1)]
     private ?string $commentaire = null;
 
@@ -46,11 +46,11 @@ class Contact
      * Getters et Setters
      *
      */
-    public function getIdContact(): ?int                {   return $this->idContact; }
+    public function getIdContact(): ?int                {   return $this->idContact;    }
     public function getEmailContact(): ?string          {   return $this->emailContact; }
-    public function getObjet(): ?string                 {   return $this->objet; }
-    public function getCommentaire(): ?string           {   return $this->commentaire; }
-    public function getDateEnvoi(): ?\DateTimeImmutable { return $this->dateEnvoi; }
+    public function getObjet(): ?string                 {   return $this->objet;        }
+    public function getCommentaire(): ?string           {   return $this->commentaire;  }
+    public function getDateEnvoi(): ?\DateTimeImmutable {   return $this->dateEnvoi;    }
 
     public function setEmailContact(string $emailContact): self
     {

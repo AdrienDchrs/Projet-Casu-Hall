@@ -3,8 +3,11 @@
 namespace App\Repository;
 
 use App\Entity\Article;
-use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use App\Model\SearchData;
 use Doctrine\Persistence\ManagerRegistry;
+use Knp\Component\Pager\PaginatorInterface;
+use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Knp\Component\Pager\Pagination\PaginationInterface;
 
 /**
  * @extends ServiceEntityRepository<Article>
@@ -16,9 +19,13 @@ use Doctrine\Persistence\ManagerRegistry;
  */
 class ArticleRepository extends ServiceEntityRepository
 {
-    public function __construct(ManagerRegistry $registry)
+    private PaginatorInterface $paginatorInterface;
+
+    public function __construct(ManagerRegistry $registry, PaginatorInterface $paginatorInterface)
     {
         parent::__construct($registry, Article::class);
+
+        $this->paginatorInterface = $paginatorInterface;
     }
 
 //    /**
@@ -45,4 +52,38 @@ class ArticleRepository extends ServiceEntityRepository
 //            ->getOneOrNullResult()
 //        ;
 //    }
+
+
+    /**
+     * À adapter en fonction de l'id marque et l'id catégorie
+     * 
+     *
+     * @param SearchData $searchData
+     * @return PaginationInterface
+     */
+    public function findBySearch(SearchData $searchData, ?int $id = null, ?string $type = null): PaginationInterface
+    {
+        $queryBuilder = $this->createQueryBuilder('a');
+
+        if(!empty($searchData->query))
+        {
+            $queryBuilder->where('a.nomArticle LIKE :query')
+            ->setParameter('query', '%' . $searchData->query . '%');
+        }
+        
+        if(!empty($id) && !empty($type))
+        {
+            if($type == 'marque')
+                $queryBuilder->andWhere('a.idMarque = :id')->setParameter('id', $id);
+            else 
+                $queryBuilder->andWhere('a.idCategorie = :id')->setParameter('id', $id);
+        }
+        
+        $queryBuilder->orderBy('a.id', 'ASC');
+
+        $query = $queryBuilder->getQuery()->getResult();
+
+        return $this->paginatorInterface->paginate($query, $searchData->page,12);
+    }
+
 }

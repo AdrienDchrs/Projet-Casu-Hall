@@ -1,51 +1,62 @@
 {% extends "base.html.twig" %}
 
-{% block title %} Casu'Hall - {{ titre }} {% endblock %}
+{% block title %} Casu'Hall - {{ nomMarque }} {% endblock %}
 
 {% block body %}
-    <div class= "mt-3 mb-3 count"> 
-        <h4 class= "p-2 mt-3 text-uppercase fw-bold"> {{ titre }} - {{ articles.getTotalItemCount }} </h4>
-    </div> 
-
-    {% for message in app.flashes('success') %}
-        <div class="container d-flex align-items-center text-center justify-content-center mb-2 mt-3">
-            <div class="alert alert-dismissible alert-success">
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                {{ message }}
+    {% set alertTypes = {'success': 'success', 'warning': 'warning', 'error': 'danger'} %}
+    {% for type, cssClass in alertTypes %}
+        {% for message in app.flashes(type) %}
+            <div class="container-fluid d-flex align-items-center text-center justify-content-center mb-2 mt-3">
+                <div class="alert alert-dismissible alert-{{ cssClass }} text-center" data-alert>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    {{ message }}
+                </div>
             </div>
-        </div>
-    {% endfor %}
-
-    {% for message in app.flashes('error') %}
-        <div class="container d-flex align-items-center text-center justify-content-center mb-2 mt-3">
-            <div class="alert alert-dismissible alert-danger">
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                {{ message }}
-            </div>
-        </div>
+        {% endfor %}
     {% endfor %}
 
     <div class="container-fluid">
+        <div class="row align-items-center">
+            {% if articles.getTotalItemCount > 0 %}
+                <div class="col-md-8">
+                    <div class="d-flex">
+                        {% set word = articles.getTotalItemCount <= 1 ? "résultat" : "résultats" %}
+                        <h4 class="p-1 mt-4 text-uppercase fw-bold">{{ nomMarque }}</h4>
+                        <h4 class="p-1 mt-4">({{ articles.getTotalItemCount }} {{ word }})</h4>
+                    </div>
+                </div>
+                <div class="col-md-4 text-end mt-5">
+                    {% include "base/_searchData.html.twig" with { form: form } only %}
+                </div>
+            {% endif %}
+        </div>
+
         <div class="row">
             {% for article in articles %}
+                {% set isAdmin = false %}
+                {% if app.user %}
+                    {% for role in app.user.roles %}
+                        {% if role == 'ROLE_ADMIN' %}
+                            {% set isAdmin = true %}
+                        {% endif %}
+                    {% endfor %}
+                {% endif %}
                 <div class="col-md-3 mb-4">
-                    <div class="card h-100">
-                        {% set isAdmin = false %}
-                        {% for role in user.roles %}
-                            {% if role == 'ROLE_ADMIN' %}
-                                {% set isAdmin = true %}
-                            {% endif %}
-                        {% endfor %}
-                        
-                        <a class="text-decoration-none text-black {% if article.quantiteStock == 0 and not isAdmin %}disabled{% endif %}"
-                        {% if article.quantiteStock > 0  or (article.quantiteStock == 0 and isAdmin) %}
-                            href="{{ path('articles.articleDetail', {'id': article.id}) }}"
-                        {% endif %}>
-                            <img src="{{ vich_uploader_asset(article, 'imageFile') }}" class="card-img-top" alt="Images de vêtements">
+                    <div class="card h-full">                
+                        <a class="text-decoration-none text-black {% if article.quantiteStock == 0 %} disabled opacity-50 {% endif %}"
+                            {% if article.quantiteStock > 0  or (article.quantiteStock == 0 and isAdmin) %}
+                                href="{{ path('article.articleDetail', {'id': article.id}) }}"
+                            {% endif %}>
+                            <img src="{{ vich_uploader_asset(article, 'imageFile') }}" class="card-img-top" alt="Image principal du vêtement">
                             <div class="card-body">
-                                <h5 class="card-title fw-bold text-uppercase">{{ article.nomArticle }}</h5>
+                                <h5 class="card-title fw-bold">{{ article.nomArticle }}</h5>
+                                <div class="card-text"> 
+                                    <p class=""> {{ article.prix | number_format(2, '.', ' ') }} €</p> 
+                                </div>
                                 {% if article.quantiteStock == 0 %}
-                                    <div class="card-text text-danger fw-bold">Stock épuisé ! Bientôt de retour...</div>
+                                    <div class="card-text">
+                                        <p class="text-danger fw-bold"> Stock épuisé ! Bientôt de retour...
+                                    </div>
                                 {% endif %}
                             </div>
                         </a>
@@ -54,6 +65,8 @@
                 {% if loop.index is divisible by(4) %}
                     </div><div class="row">
                 {% endif %}
+            {% else %}
+                {% include "base/_notFoundPage.html.twig" with {sentence : "Nous n'avons pas d'articles en stock... Veuillez réessayer plus tard", form: form} only %}
             {% endfor %}
         </div>
     </div>

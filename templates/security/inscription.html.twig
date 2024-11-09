@@ -3,11 +3,23 @@
 {% block title %} Casu'Hall - Inscription {% endblock %}
 
 {% block body %}
+     {% set alertTypes = {'success': 'success', 'warning': 'warning', 'error': 'danger'} %}
+    {% for type, cssClass in alertTypes %}
+        {% for message in app.flashes(type) %}
+            <div class="container-fluid d-flex align-items-center text-center justify-content-center mb-2 mt-3">
+                <div class="alert alert-dismissible alert-{{ cssClass }} text-center" data-alert>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    {{ message }}
+                </div>
+            </div>
+        {% endfor %}
+    {% endfor %}
+
     <div class = "text-center"> 
         <h4 class = "p-2 mt-3 text-uppercase fw-bold"> Inscription </h4>
     </div>
     <div class="container d-flex align-items-center mb-4 mt-3">
-        <div class="p-4 border border-black bg-light rounded mx-auto">
+        <div class="p-4 border border-black bg-light rounded mx-auto shadow shadow-lg">
             {{ form_start(form) }}
                 <div class="row mb-2">
                     <div class="mb-3 col-md-6">
@@ -98,22 +110,4 @@
         </div>
     </div>
     {{ form_end(form) }}
-
-    {% if form_errors(form.plainPassword.first) %}
-        <div class="container d-flex align-items-center text-center justify-content-center mb-2 mt-2">
-            <div class="alert alert-dismissible alert-danger">
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    Erreurs lors de l'inscription. Veuillez vérifier si ce vos mots de passe sont valides.  
-            </div>
-        </div>
-    {% else %}
-        {% for message in app.flashes('erreur') %}
-                <div class="container d-flex align-items-center text-center justify-content-center mb-2 mt-3">
-                    <div class="alert alert-dismissible alert-danger">
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                        {{ message }}
-                    </div>
-                </div>
-        {% endfor %}
-    {% endif %}
 {% endblock %}

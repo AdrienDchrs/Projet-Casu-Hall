@@ -3,18 +3,10 @@
 namespace App\Form;
 
 use App\Entity\Utilisateur;
-use Symfony\Component\Form\AbstractType;
-use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Validator\Constraints as Assert;
-use Symfony\Component\Form\Extension\Core\Type\TelType;
-use Symfony\Component\Form\Extension\Core\Type\TextType;
-use Symfony\Component\Form\Extension\Core\Type\DateType;
-use Symfony\Component\Form\Extension\Core\Type\EmailType;
-use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
-use Symfony\Component\Form\Extension\Core\Type\SubmitType;
-use Symfony\Component\Form\Extension\Core\Type\RepeatedType;
-use Symfony\Component\Form\Extension\Core\Type\PasswordType;
+use Symfony\Component\Form\{AbstractType,FormBuilderInterface};
+use Symfony\Component\Form\Extension\Core\Type\{TelType,TextType,DateType,EmailType,ChoiceType,SubmitType,RepeatedType,PasswordType};
 
 class InscriptionType extends AbstractType
 {

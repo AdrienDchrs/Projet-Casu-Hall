@@ -1,12 +1,24 @@
 {% extends "base.html.twig" %}
 
-{% block title %} Casu'Hall - détail de l'article {% endblock %}
+{% block title %} Casu'Hall - Détail de l'article {% endblock %}
 
 {% block body %}
 
 <div class="container-fluid">
+    {% set alertTypes = {'success': 'success', 'warning': 'warning', 'error': 'danger'} %}
+    {% for type, cssClass in alertTypes %}
+        {% for message in app.flashes(type) %}
+            <div class="container-fluid d-flex align-items-center text-center justify-content-center mb-2 mt-3">
+                <div class="alert alert-dismissible alert-{{ cssClass }} text-center" data-alert>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    {{ message }}
+                </div>
+            </div>
+        {% endfor %}
+    {% endfor %}
+    
     <div class="row mb-4">
-        <div class="col-12 col-md-6 text-center mt-3">
+        <div class="col-12 col-md-4 text-center mt-3">
             <img src="{{ vich_uploader_asset(articles, 'imageFile') }}" alt="Image de l'article" class="img-fluid mx-auto d-block" id="zoomImage" style="cursor: pointer;">
         </div>
 
@@ -21,54 +33,61 @@
             </div>
         </div>
 
-        <div class="col-12 col-md-6 mt-4 mb-1">
-            <h4 class="text-uppercase fw-bold mb-2">{{ articles.nomArticle }}</h4>
+        <div class="col-12 col-md-6 mt-3 mb-1">
+            <h4 class="text-uppercase mb-2">{{ articles.nomArticle }} </h4>
             
             <hr>
 
             <div class="align-items-center mb-2"> 
                 <h6 class="fw-bold me-2 text-uppercase">Prix</h6>
-                <h4 class="text-danger fw-bold">{{ articles.prix }} €</h4>
+                <h4 class="text-danger fw-bold">{{ articles.prix | number_format(2, '.', ' ') }} €</h4>
             </div>
-            
+
             <hr>
-            
+
             <div class="align-items-center mb-2"> 
-                <h6 class="fw-bold me-2 text-uppercase">Description</h6>
+                <h6 class="fw-bold me-2 text-uppercase">Description du produit </h6>
                 <p class="text-justify">{{ articles.description }}</p>
             </div>
 
             <hr>
+
+            <div class="d-flex align-items-center mb-2"> 
+                <h6 class="fw-bold me-2 text-uppercase">Marque </h6>
+                <h6 class=""> {{ nomMarque }}</h6>
+            </div>
+            
+            <hr>
             
             <div class="d-flex align-items-center mb-2"> 
-                <h6 class="fw-bold me-2 text-uppercase">Taille</h6> 
+                <h6 class="fw-bold me-2">Taille </h6> 
                 <h6>{{ articles.taille }}</h6>
             </div>
             
             <hr>
 
             <div class="d-flex align-items-center mb-2"> 
-                <h6 class="fw-bold me-2 text-uppercase">Quantité en stock</h6> 
+                <h6 class="fw-bold me-2 text-uppercase">Quantité en stock : </h6> 
                 <h6> {{ articles.quantiteStock }}</h6>
             </div>
 
             <hr>
 
             <div class="d-flex align-items-center mb-3"> 
-                <h6 class="fw-bold me-2 text-uppercase mt-2 me-4">Note</h6> 
-                
                 {% for i in range(1, articles.note) %}
                     <img src="/assets/images/etoile_pleine.png" alt="etoile pleine" class="img-fluid ms-1">
                 {% endfor %}
 
-                {% set nbEtoile = 10 - articles.note %}
+                {% set nbEtoile = 5 - articles.note %}
 
-                {% for i in range(1,nbEtoile) %}
-                    <img src="/assets/images/etoile_vide.png" alt="etoile vide" class="img-fluid ms-1">
-                {% endfor %}
+                {% if nbEtoile != 0 %}
+                    {% for i in range(1,nbEtoile)  %}
+                        <img src="/assets/images/etoile_vide.png" alt="etoile vide" class="img-fluid ms-1">
+                    {% endfor %}
+                {% endif %}
             </div>
 
-            <div class="d-flex align-items-center mb-3 mt-4">
+            <div class="d-flex align-items-center mb-3 mt-3">
                 <ul>
                     {% for texte in textes %}
                         <li>{{ texte }}</li>
@@ -77,28 +96,29 @@
             </div>
 
             <div class="mt-2 d-flex align-items-center justify-content-center">
-                <input type="button" class="btn btn-outline-dark me-2" value="Ajouter au panier">
-                {% if is_granted('IS_AUTHENTICATED_FULLY') %}
+                <a href="{{ path('article.ajouterPanier',{'id': articles.id}) }}" class="btn btn-light me-2 border border-1 border-black"> 
+                    <img src="/assets/images/panier.png" class="img-fluid" alt="Ajouter au panier" title="Ajouter au panier">
+                </a>
+
+                <a href="{{ path('article.favori', {'id': articles.id }) }}" class="btn btn-light border border-1 border-black me-2" > 
+                    <img src="/assets/images/favori_plein.png" class="img-fluid" alt="Ajouter aux favoris" title="Ajouter aux favoris">
+                </a>
+                
+                {% if app.user %}
                     {% for role in user.roles %}
                         {% if role == "ROLE_ADMIN" %}
-                            <a href="{{  path('article.modifier', {'id': articles.id}) }}" class="btn btn-outline-dark me-2"> Modifier </a>
-                            <a href="{{  path('article.delete', {'id': articles.id}) }}" class="btn btn-outline-dark"> Supprimer </a>   
+                            <a href="{{ path('article.modifier', {'id': articles.id}) }}" class="btn btn-light me-2 border border-1 border-black"> 
+                                <img src="/assets/images/editer.png" class="img-fluid" alt="Modifier l'article" title="Modifier l'article">
+                            </a>
+                            <a href="{{ path('article.delete', {'id': articles.id}) }}" class="btn btn-light border border-1 border-black">  
+                                <img src="/assets/images/supprimer.png" class="img-fluid" alt="Supprimer l'article" title="Supprimer l'article">
+                            </a>   
                         {% endif %}
                     {% endfor %}
                 {% endif %}
             </div>
         </div>
     </div>
-
-    {% for message in app.flashes('success') %}
-        <div class="container d-flex align-items-center text-center justify-content-center mb-2 mt-3">
-            <div class="alert alert-dismissible alert-success">
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                {{ message }}
-            </div>
-        </div>
-    {% endfor %}
-
 </div>
 
 {% endblock %}

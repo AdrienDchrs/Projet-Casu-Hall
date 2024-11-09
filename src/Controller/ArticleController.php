@@ -2,31 +2,36 @@
 
 namespace App\Controller;
 
-use App\Entity\Marque; 
-use App\Entity\Article;
-use App\Entity\Categorie;
-use App\Form\ModifierArticleType;
-use App\Repository\MarqueRepository;
-use App\Repository\ArticleRepository;
-use App\Repository\CategorieRepository;
+use App\Model\SearchData;
 use Doctrine\ORM\EntityManagerInterface;
 use Knp\Component\Pager\PaginatorInterface;
-use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
+use App\Form\{ModifierArticleType,SearchType};
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\HttpFoundation\{Cookie,Request,Response};
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
+use App\Entity\{Marque, Article, Categorie, Utilisateur, ArticleFavori};
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\{Security,IsGranted};
+use App\Repository\{MarqueRepository,PanierRepository,ArticleRepository,CategorieRepository, ArticleFavoriRepository};
 
 class ArticleController extends AbstractController
 {
     private PaginatorInterface $paginator;
+    private PanierRepository $repositoryPanier;
     private MarqueRepository $repositoryMarque; 
     private ArticleRepository $repositoryArticle;
     private CategorieRepository $repositoryCategorie;
+    private ArticleFavoriRepository $repositoryArticleFavori;
 
-    private array $marques; 
-    private array $articles;
-    private array $categories;
+    private array $marques = []; 
+    private array $articles = [];
+    private array $categories = [];
+    private array $articlesFavoris = [];
+    private array $panier = [];
+
+    // Utilisé pour les utilisateurs non connectés.
+    private array $emptyUserFavoris = [];
+    private array $emptyUserPanier = [];
 
     private EntityManagerInterface $manager;
 
@@ -35,21 +40,23 @@ class ArticleController extends AbstractController
      * @param MarqueRepository $repositoryMarque
      * @param CategorieRepository $repositoryCategorie
      * @param ArticleRepository $repositoryArticle
+     * @param ArticleFavoriRepository $repositoryArticleFavori
      * @param PaginatorInterface $paginator
      * @param EntityManagerInterface $manager
      */
-    public function __construct(MarqueRepository $repositoryMarque,CategorieRepository $repositoryCategorie, ArticleRepository $repositoryArticle, PaginatorInterface $paginator, EntityManagerInterface $manager)
+    public function __construct(MarqueRepository $repositoryMarque,CategorieRepository $repositoryCategorie, ArticleRepository $repositoryArticle, PaginatorInterface $paginator, EntityManagerInterface $manager, ArticleFavoriRepository $repositoryArticleFavori, PanierRepository $repositoryPanier)
     {
         $this->repositoryMarque = $repositoryMarque;
-        $this->repositoryCategorie = $repositoryCategorie;
+        $this->repositoryPanier = $repositoryPanier;
         $this->repositoryArticle = $repositoryArticle;
+        $this->repositoryCategorie = $repositoryCategorie;
+        $this->repositoryArticleFavori = $repositoryArticleFavori;
 
-        $this->marques = $this->repositoryMarque->findAll();
-        $this->articles = $this->repositoryArticle->findAll();
-        $this->categories = $this->repositoryCategorie->findAll();
+        $this->articles         = $this->repositoryArticle->findAll();
+        $this->categories       = $this->repositoryCategorie->findAll();
+        $this->marques = $this->repositoryMarque->findBy([], ['nomMarque' => 'ASC']);
 
         $this->paginator = $paginator;
-
         $this->manager = $manager;
     }
 
@@ -60,14 +67,41 @@ class ArticleController extends AbstractController
      * @return Response
      */
     #[Route('/articles', 'articles.all', methods:['GET'])]
-    public function allArticles(Request $request): Response
+    public function GetAllArticles(Request $request): Response
     {
-
         $articlesPaginer = $this->paginator->paginate($this->articles,$request->query->getInt('page', 1),12);
+        
+        $user = $this->getUser();
+        if($user)
+        {    
+            $this->articlesFavoris = $this->repositoryArticleFavori->findBy(['utilisateur' => $user]);
+            $this->panier = $this->repositoryPanier->findBy(['utilisateur' => $user]);
+        }
+        else 
+        {
+            $this->emptyUserFavoris = $this->getCookieUserNotConnected($request,'favoris',$this->emptyUserFavoris);
+            $this->emptyUserPanier = $this->getCookieUserNotConnected($request,'panier',$this->emptyUserPanier);
+        }
+
+        $searchData = new SearchData();
+        $form = $this->createForm(SearchType::class, $searchData);
+        $form->handleRequest($request);
+
+        if($form->isSubmitted() && $form->isValid())
+        {
+            $searchData->page = $request->query->getInt('page',1);
+
+            $articlesPaginer = $this->repositoryArticle->findBySearch($searchData);
+
+            return $this->render('articles/articles.html.twig', ['articles' => $articlesPaginer, 'marques' => $this->marques, 'categories' => $this->categories, 'user' => $user, 
+                'nomMarque' => 'Tous les vêtements disponibles', 'articlesFavoris' => $this->articlesFavoris, 'panier' => $this->panier, 
+                'emptyUserFavoris' => $this->emptyUserFavoris, 'emptyUserPanier' => $this->emptyUserPanier, 'form' => $form->createView()]);
+        }
 
         return $this->render('articles/articles.html.twig', ['articles' => $articlesPaginer, 'marques' => $this->marques,
-                                                             'categories' => $this->categories,'user' => $this->getUser(), 
-                                                             'titre' => 'Tous les articles disponibles']);
+                                                             'categories' => $this->categories,'user' => $user, 'nomMarque' => 'Tous les vêtements disponibles', 
+                                                             'articlesFavoris' => $this->articlesFavoris, 'panier' => $this->panier, 
+                                                             'emptyUserFavoris' => $this->emptyUserFavoris, 'emptyUserPanier' => $this->emptyUserPanier, 'form' => $form->createView()]);
     }
 
     /**
@@ -79,16 +113,45 @@ class ArticleController extends AbstractController
      */
     #[Route('/articles/marque/{id}', 'articles.articleMarque', methods:['GET', 'POST'])]
     #[ParamConverter('Marque', class: 'App\Entity\Marque')]
-    public function articlesMarque(Marque $marque, Request $request): Response
+    public function GetArticlesByMarque(Marque $marque, Request $request): Response
     {
-        $titre =  'Nos articles de la marque ' . $marque->getNomMarque();
+        $user = $this->getUser();
 
         $this->articles = $this->repositoryArticle->findBy(['idMarque' => $marque->getIdMarque()]);
-
         $articlesPaginer = $this->paginator->paginate($this->articles,$request->query->getInt('page', 1),12);
 
+        if($user)
+        {
+            $this->articlesFavoris = $this->repositoryArticleFavori->findBy(['utilisateur' => $user]);
+            $this->panier = $this->repositoryPanier->findBy(['utilisateur' => $user]);
+        }
+        else 
+        {
+            $this->emptyUserFavoris = $this->getCookieUserNotConnected($request,'favoris',$this->emptyUserFavoris);
+            $this->emptyUserPanier = $this->getCookieUserNotConnected($request,'panier',$this->emptyUserPanier);
+        }
+
+        $searchData = new SearchData();
+        $form = $this->createForm(SearchType::class, $searchData);
+        $form->handleRequest($request);
+
+        if($form->isSubmitted() && $form->isValid())
+        {
+            $searchData->page = $request->query->getInt('page',1);
+
+            $articlesPaginer = $this->repositoryArticle->findBySearch($searchData,$marque->getIdMarque(),"marque");
+
+            return $this->render('articles/articles.html.twig', ['articles' => $articlesPaginer,'marques' => $this->marques,
+            'categories' => $this->categories,'user' => $user, 'nomMarque' => 'Nos articles de la marque ' .$marque->getNomMarque(), 
+            'articlesFavoris' => $this->articlesFavoris, 'panier' => $this->panier, 'emptyUserFavoris' => $this->emptyUserFavoris, 
+            'emptyUserPanier' => $this->emptyUserPanier, 'form' => $form->createView()]);
+        }
+
         return $this->render('articles/articles.html.twig', ['articles' => $articlesPaginer,'marques' => $this->marques,
-                                                             'categories' => $this->categories,'user' => $this->getUser(), 'titre' => $titre]);
+                                                             'categories' => $this->categories,'user' => $user, 'nomMarque' => 'Nos articles de la marque ' .$marque->getNomMarque(), 
+                                                             'articlesFavoris' => $this->articlesFavoris, 'panier' => $this->panier, 'emptyUserFavoris' => $this->emptyUserFavoris, 
+                                                             'emptyUserPanier' => $this->emptyUserPanier, 'form' => $form->createView()]);
+                                                             
     }
 
     /**
@@ -98,18 +161,48 @@ class ArticleController extends AbstractController
      * @param Categorie $categorie
      * @return Response
      */
-    #[Route('/articles/categorie/{id}', 'articles.articleCategorie', methods:['GET', 'POST'])]
     #[ParamConverter('Categorie', class: 'App\Entity\Categorie')]
-    public function articlesCategorie(Categorie $categorie, Request $request): Response
+    #[Route('/articles/categorie/{id}', 'articles.articleCategorie', methods:['GET', 'POST'])]
+    public function GetArticlesByCategorie(Categorie $categorie, Request $request): Response
     {
+        $user = $this->getUser();
+
         $titre =  'Nos ' .$categorie->getNomCategorie();
 
         $this->articles = $this->repositoryArticle->findBy(['idCategorie' => $categorie->getIdCategorie()]);
+        $articlesPaginer = $this->paginator->paginate($this->articles,$request->query->getInt('page', 1),12);   
 
-        $articlesPaginer = $this->paginator->paginate($this->articles,$request->query->getInt('page', 1),12);
+        if($user)
+        {
+            $this->articlesFavoris = $this->repositoryArticleFavori->findBy(['utilisateur' => $user]);
+            $this->panier = $this->repositoryPanier->findBy(['utilisateur' => $user]);
+        }
+        else 
+        {
+            $this->emptyUserFavoris = $this->getCookieUserNotConnected($request,'favoris',$this->emptyUserFavoris);
+            $this->emptyUserPanier = $this->getCookieUserNotConnected($request,'panier',$this->emptyUserPanier);
+        }
+
+        $searchData = new SearchData();
+        $form = $this->createForm(SearchType::class, $searchData);
+        $form->handleRequest($request);
+
+        if($form->isSubmitted() && $form->isValid())
+        {
+            $searchData->page = $request->query->getInt('page',1);
+
+            $articlesPaginer = $this->repositoryArticle->findBySearch($searchData,$categorie->getIdCategorie(),"categorie");
+
+            return $this->render('articles/articles.html.twig', ['articles' => $articlesPaginer,'marques' => $this->marques,
+                                                             'categories' => $this->categories,'user' => $user, 'nomMarque' => $titre, 
+                                                             'articlesFavoris' => $this->articlesFavoris, 'panier' => $this->panier, 'emptyUserFavoris' => $this->emptyUserFavoris, 
+                                                             'emptyUserPanier' => $this->emptyUserPanier, 'form' => $form->createView()]);
+        }
 
         return $this->render('articles/articles.html.twig', ['articles' => $articlesPaginer,'marques' => $this->marques,
-                                                             'categories' => $this->categories,'user' => $this->getUser(), 'titre' => $titre]);
+                                                             'categories' => $this->categories,'user' => $user, 'nomMarque' => $titre, 
+                                                             'articlesFavoris' => $this->articlesFavoris, 'panier' => $this->panier, 'emptyUserFavoris' => $this->emptyUserFavoris, 
+                                                             'emptyUserPanier' => $this->emptyUserPanier, 'form' => $form->createView()]);
     }
 
     /**
@@ -119,39 +212,32 @@ class ArticleController extends AbstractController
      * @param Article $article
      * @return Response
      */
-    #[Route('/articles/detail/{id}', 'articles.articleDetail', methods:['GET', 'POST'])]
+    #[Route('/articles/detail/{id}', 'article.articleDetail', methods:['GET', 'POST'])]
     #[ParamConverter('Article', class: 'App\Entity\Article')]
-    public function articleDetail(Article $article): Response
+    public function GetDetailArticles(Request $request, Article $article): Response
     {
-        $textes = $this->renvoyerTexte($article->getNote());
-        return $this->render('articles/article-detail.html.twig', ['articles' => $article,'marques' => $this->marques,
-                                                             'categories' => $this->categories,'user' => $this->getUser(),
-                                                            'textes' => $textes]);
-    }
+        $user = $this->getUser();
 
-    /**
-     * Suppression d'un article en passant par son identifiant
-     * @param Article $article
-     * @return Response
-     */
-    #[Route('/articles/supprimer/{id}', 'article.delete', methods:['GET', 'POST'])]
-    #[ParamConverter('Article', class: 'App\Entity\Article')]
-    public function delete(Article $article): Response
-    {
-        if(!$article)
+        $textes = $this->ReturnText($article->getNote());
+
+        if($user)
         {
-            $this->addFlash('error', 'L\'article n\'existe pas !');
-            return $this->redirectToRoute('articles.all');
+            $this->articlesFavoris = $this->repositoryArticleFavori->findBy(['utilisateur' => $user]);
+            $this->panier = $this->repositoryPanier->findBy(['utilisateur' => $user]);
+        }
+        else
+        { 
+            $this->emptyUserFavoris = $this->getCookieUserNotConnected($request,'favoris',$this->emptyUserFavoris);
+            $this->emptyUserPanier = $this->getCookieUserNotConnected($request,'panier',$this->emptyUserPanier);  
         }
 
-        $this->articles = $this->repositoryArticle->findBy(['id' => $article->getId()]);
+        $nomMarque = $this->repositoryArticle->find($article->getId())->getIdMarque()->getNomMarque();
 
-        $this->manager->remove($this->articles[0]); 
-        $this->manager->flush();
-
-        $this->addFlash('success', 'L\'article a bien été supprimé !');
-
-        return $this->redirectToRoute('articles.all', ['articles' => $this->articles]);
+        return $this->render('articles/article-detail.html.twig', ['articles' => $article,'marques' => $this->marques,
+                                                                   'categories' => $this->categories,'user' => $user,
+                                                                   'textes' => $textes, 'articlesFavoris' => $this->articlesFavoris, 
+                                                                   'nomMarque' => $nomMarque, 'panier' => $this->panier, 'emptyUserFavoris' => $this->emptyUserFavoris, 
+                                                                   'emptyUserPanier' => $this->emptyUserPanier]);
     }
 
     /**
@@ -160,10 +246,15 @@ class ArticleController extends AbstractController
      * @param Request $request
      * @return Response
      */
-    #[Route('/articles/modifier/{id}', 'article.modifier', methods:['GET', 'POST'])]
+    #[IsGranted('ROLE_ADMIN')]
+    #[Security('is_granted("ROLE_ADMIN")')]
     #[ParamConverter('Article', class: 'App\Entity\Article')]
-    public function modifier(Article $article, Request $request): Response
+    #[Route('/articles/modifier/{id}', 'article.modifier', methods:['GET', 'POST'])]
+    public function ModifyArticle(Article $article, Request $request): Response
     {
+        $this->articlesFavoris = $this->repositoryArticleFavori->findBy(['utilisateur' => $this->getUser()]);
+        $this->panier = $this->repositoryPanier->findBy(['utilisateur' => $this->getUser()]);
+
         $form = $this->createForm(ModifierArticleType::class, $article, ['marques' => $this->marques, 'categories' => $this->categories]);
         $form->handleRequest($request);
 
@@ -176,17 +267,133 @@ class ArticleController extends AbstractController
             
             $this->addFlash('success', 'L\'article a bien été modifié !');
             
-            return $this->redirectToRoute('articles.articleDetail', ['id' => $article->getId()]);
-
+            return $this->redirectToRoute('article.articleDetail', ['id' => $article->getId()]);
         }
         else if($form->isSubmitted() && !$form->isValid())
         {
-            $this->addFlash('error', 'Erreur de saisies lors de la modification de l\'article !');
+            $this->addFlash('error', 'Erreur de saisies lors de la modification de l\'article ! Veuillez réessayer.');
         }
 
         return $this->render('articles/modifier-article.html.twig', ['articles' => $this->articles,'marques' => $this->marques,
                                                                      'categories' => $this->categories, 'form' => $form->createView(), 
-                                                                     'user' => $this->getUser()]); 
+                                                                     'user' => $this->getUser(), 'articlesFavoris' => $this->articlesFavoris, 'panier' => $this->panier]); 
+    }
+
+    /**
+     * Suppression d'un article en passant par son identifiant
+     * @param Article $article
+     * @return Response
+     */
+    #[IsGranted('ROLE_ADMIN')]
+    #[Security('is_granted("ROLE_ADMIN")')]
+    #[ParamConverter('Article', class: 'App\Entity\Article')]
+    #[Route('/articles/supprimer/{id}', 'article.delete', methods:['GET', 'POST'])]
+    public function DeleteArticle(Article $article): Response
+    {
+        if(!$article)
+        {
+            $this->addFlash('error', 'L\'article n\'existe pas !');
+            return $this->redirectToRoute('articles.all');
+        }
+
+        $this->articles = $this->repositoryArticle->findBy(['id' => $article->getId()]);
+
+        $this->articlesFavoris = $this->repositoryArticleFavori->findBy(['article' => $article->getId()]);
+
+        if($this->articlesFavoris > 0)
+        {
+            for($i = 0; $i < count($this->articlesFavoris); $i++)
+            {
+                $this->manager->remove($this->articlesFavoris[$i]);
+            }
+        }
+
+        $this->manager->remove($this->articles[0]); 
+        $this->manager->flush();
+
+        $this->addFlash('success', 'L\'article a bien été supprimé !');
+
+        return $this->redirectToRoute('articles.all', ['articles' => $this->articles]);
+    }
+
+     /**
+     * Permet d'ajouter un article en favori. On passe par l'identifiant de l'article en paramètre de l'url
+     * @param Article $article 
+     * @param Utilisateur $utilisateur
+     * @return Response
+     */
+    #[ParamConverter('article', class: 'App\Entity\Article')]
+    #[Route('/articles/favori/{id}', 'article.favori', methods:['GET', 'POST'])]
+    public function AddFavori(Article $article, Request $request): Response
+    {
+        $user = $this->getUser();
+
+        // Je récupère un url de type : http://127.0.0.1:8000/panier/ ou http://127.0.0.1:8000/articles/detail
+        $chemin = $request->headers->get('referer'); 
+
+        if($user)
+        {
+            $bEstFavori = $this->repositoryArticleFavori->findBy(['article' => $article->getId(), 'utilisateur' => $user]);
+
+            if($bEstFavori)
+            {
+                $this->addFlash('warning', 'L\'article est déjà dans vos favoris !');
+                
+                if(strpos($chemin, 'panier'))
+                    $response = $this->redirectToRoute('home.panier', ['id' => $article->getId()]);
+                else if(strpos($chemin, 'detail'))
+                    $response = $this->redirectToRoute('article.articleDetail', ['id' => $article->getId()]);
+            }
+            else
+            {
+                $articleFavori = new ArticleFavori();
+                $articleFavori->setUtilisateur($this->getUser());
+                $articleFavori->setArticle($article);
+        
+                $this->manager->persist($articleFavori);
+                $this->manager->flush();
+        
+                $this->addFlash('success', 'L\'article a bien été ajouté à vos favoris !');
+
+                $this->articlesFavoris = $this->repositoryArticleFavori->findBy(['utilisateur' => $user]);
+                $this->panier = $this->repositoryPanier->findBy(['utilisateur' => $user]);            
+            }
+        }
+        else 
+        {
+            $arrFavoris = json_decode($request->cookies->get('favoris', '[]'), true);
+
+            if(!in_array($article->getId(), $arrFavoris))
+            {
+                $arrFavoris[] = $article->getId();
+
+                $this->addFlash('success', 'L\'article a bien été ajouté à vos favoris !');
+
+                $chemin = $request->headers->get('referer'); 
+
+                if(strpos($chemin, 'panier'))
+                    $response = $this->redirectToRoute('home.panier', ['id' => $article->getId()]);
+                else if(strpos($chemin, 'detail'))
+                    $response = $this->redirectToRoute('article.articleDetail', ['id' => $article->getId()]);
+
+                $response->headers->setCookie(new Cookie('favoris', json_encode($arrFavoris), time() + 3600, '/'));
+                
+                
+
+                return $response;
+            }
+            else
+            {
+                $this->addFlash('warning', 'L\'article est déjà dans vos favoris !');
+            }
+        }
+
+        if(strpos($chemin, 'panier'))
+            return $this->redirectToRoute('home.panier', ['id' => $article->getId()]);
+        else if(strpos($chemin, 'detail'))
+            return $this->redirectToRoute('article.articleDetail', ['id' => $article->getId()]);
+    
+        return $this->redirectToRoute('home.index', ['id' => $article->getId()]);
     }
 
     /**
@@ -194,39 +401,42 @@ class ArticleController extends AbstractController
      * @param [int] $note
      * @return array
      */
-    private function renvoyerTexte($note): array
+    private function ReturnText($note): array
     {
         switch($note)
         {
             case 1:
-                return ['Très mauvais état','Trous et déchirures importantes, irréparables.','Taches étendues et incrustées, multiples et très visibles.', 
-                        'Usure extrême, tissu effiloché ou détérioré.','Vêtement inutilisable tel quel.'];
+                return ['Très mauvais état','Trous et déchirures plus ou moins importantes, irréparables.','Tâches étendues et incrustées, multiples et très visibles.', 
+                        'Usure extrême, tissu effiloché ou détérioré.','Vêtement inutilisable sans réparation majeure.'];
             case 2:
-                return ['Mauvais état','Trous et déchirures mineures mais nombreuses.','Tâches significatives et nombreuses, difficiles à enlever.',
-                        'Usure générale prononcée, couleur ternie.','Réparations nécessaires pour être porté.' ];
+                return ['Mauvais état','Trous et déchirures mineures mais nombreuses.','Tâches visibles et persistantes, difficiles à enlever.',
+                        'Usure générale marquée, couleur ternie.','Réparations nécessaires avant de pouvoir être porté.' ];
             case 3:
-                return ['Etat médiocre','Quelques déchirures ou trous modérés, réparables.','Plusieurs taches visibles mais réparables avec un bon nettoyage.', 
-                        'Usure notable, tissu et coutures affaiblis.','Nécessite des soins pour améliorer son apparence.'];
-            case 4:
-                return ['État passable','Trous ou déchirures très mineures, peu nombreux.','Quelques taches légères peuvent nécessiter un nettoyage.',
+                return ['État passable','Quelques déchirures mineures, réparables.','Plusieurs tâches légères nécessitant un bon nettoyage.',
                         'Usure perceptible mais pas critique, légèrement défraîchi.','Peut être porté mais avec des imperfections visibles.'];
-            case 5:
-                return ['État correct','Aucune déchirure majeure, quelques accrocs mineurs.','Tâches très légères et localisées, partiellement effaçables.',
-                        'Usure modérée, couleur légèrement passée.','Aspect général acceptable avec quelques défauts visibles.'];
-            case 6:
+            case 4:
                 return ['Bon état','Très peu de défauts, aucune déchirure significative.','Tâches très légères, pas immédiatement visibles.',
                         'Usure légère, tissu encore en bon état.','Porté avec soin, apparence générale satisfaisante.'];
-            case 7:
-                return ['Très bon état','Aucun trou ni déchirure.','Taches minimes, quasiment invisibles.','Usure très légère, tissu en bon état.',
+            case 5:
+                return ['Très bon état voir neuf','Aucun défaut structurel, ni trou ni déchirure.','Aucune tâche visible, aspect pre.','Usure quasi inexistante, tissu presque neuf.',
                         'Aspect général très soigné, peut être porté sans souci.'];
-            case 8:
-                return ['Excellent état','Aucun défaut structurel, ni trou ni déchirure.','Aucune tâche, apparence propre.','Usure presque inexistante, tissu quasi neuf.',
-                        'Aspect général impeccable, porté très peu de fois.'];
-            case 9:
-                return ['Comme neuf','Aucune usure perceptible, aucun défaut.','Aucun signe d\'utilisation, tissu impeccable.','État quasi identique à celui du neuf, sans étiquette.',
-                        'Aspect général comme sorti du magasin.'];
-            case 10:
-                return ['Neuf','Jamais porté, état parfait.','Étiquette encore attachée.','Aucun signe d\'usure ou de détérioration.','Aspect général totalement neuf, sans aucun défaut.'];
         }
+    }
+
+    /** 
+     * Fonction privée qui permet de récupérer les favoris d'un utilisateur non connecté
+     * @param Request $request sert à établir une requête HTTP pour récupérer les cookies de la session.
+     */
+    private function getCookieUserNotConnected(Request $request, $cookieName, $array)
+    {
+
+        $cookie = json_decode($request->cookies->get($cookieName, '[]'), true);
+            
+        if(!empty($cookie))
+            $array = $this->manager->getRepository(Article::class)->findBy(['id' => $cookie]);
+        else 
+            $array = [];
+
+        return $array; 
     }
 }

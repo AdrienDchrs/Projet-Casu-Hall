@@ -2,19 +2,11 @@
 
 namespace App\Form;
 
-use App\Entity\Marque;
-use App\Entity\Article;
-use App\Entity\Categorie;
-use Symfony\Component\Form\AbstractType;
-use Symfony\Component\Form\FormBuilderInterface;
+use App\Entity\{Article,Categorie,Marque};
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Validator\Constraints as Assert;
-use Symfony\Component\Form\Extension\Core\Type\TextType;
-use Symfony\Component\Form\Extension\Core\Type\SubmitType;
-use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
-use Symfony\Component\Form\Extension\Core\Type\NumberType;
-use Symfony\Component\Form\Extension\Core\Type\IntegerType;
-use Symfony\Component\Form\Extension\Core\Type\TextareaType;
+use Symfony\Component\Form\{AbstractType,FormBuilderInterface};
+use Symfony\Component\Form\Extension\Core\Type\{TextType,TextareaType,IntegerType,NumberType,ChoiceType,SubmitType};
 
 class ModifierArticleType extends AbstractType
 {
@@ -135,7 +127,7 @@ class ModifierArticleType extends AbstractType
                     'id' => 'note',
                     'class' => 'form-control',
                     'min' => '1',
-                    'max' => '10'
+                    'max' => '5'
                 ],
                 'label' => 'Note de l\'article : *',
                 'label_attr' => [
@@ -144,7 +136,7 @@ class ModifierArticleType extends AbstractType
                     'for' => 'note',
                 ],
                 'constraints'   => [
-                    new Assert\Length(['min' => 1, 'max' => 10]),
+                    new Assert\Length(['min' => 1, 'max' => 5]),
                     new Assert\NotBlank(),
                     new Assert\NotNull()
                 ]
@@ -198,7 +190,7 @@ class ModifierArticleType extends AbstractType
                 ]
             ])
             ->add('modifierArticle', SubmitType::class, [
-                'label' => 'Modifier l\'article', 
+                'label' => 'Mettre à jour l\'article', 
                 'attr' => ['class' => 'btn btn-outline-dark']
             ]);
     }

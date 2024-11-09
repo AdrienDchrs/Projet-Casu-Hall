@@ -1,4 +1,3 @@
-
 /**
  * Fonction en JQuery pour slide tous les éléments de mon carrousel toutes les 4 secondes
  * Si on arrive à la fin du carrousel, on le met en pause
@@ -49,38 +48,7 @@ function afficherMotDePasse(pwd, pwd2)
 }
 
 /**
- * Cette fonction permet de fixer le footer en cas de contenu inférieur à la hauteur de la fenêtre
- * Cela permet de ne pas avoir le footer en plein milieu de la page
- */
-document.addEventListener("DOMContentLoaded", function() 
-{
-    function footer()
-    {
-    
-        var footer = document.getElementById('footer');
-        var body = document.body;
-        var html = document.documentElement;
-        var height = Math.max( body.scrollHeight, body.offsetHeight, html.clientHeight, html.scrollHeight, html.offsetHeight );
-
-        if(height <= window.innerHeight)
-        {
-            footer.style.position = 'fixed';
-            footer.style.bottom = '0';
-            footer.style.width = '100%';
-        }
-        else
-        {
-            footer.style.position = 'relative';
-        }
-    }
-    footer();
-
-    window.addEventListener('resize', footer);
-});
-
-
-/**
- * Simplement du JQuery pour afficher le thème modal de Bootstrap
+ * Simplement du JQuery pour afficher le thème modal de Bootstrap qui consiste à voir l'image en plein écran lorsque l'on clique dessus. 
  */
 $(document).ready(function() 
 {
@@ -90,3 +58,104 @@ $(document).ready(function()
     });
 });
 
+
+/**
+ * Script permettant d'incrémenter ou de décrémenter le prix total d'un lorsque nous ne sommes pas connectés
+ */
+
+var totalOrderPrice = 0;
+function adjustPrice(signe, price, maxQuantity, idArticle) 
+{
+    var operation = document.getElementById(signe).id; 
+    var label = document.getElementById("quantity " + idArticle); 
+    var priceElement = document.getElementById("price " + idArticle); 
+    var totalPriceElement = document.getElementById("totalPrice"); 
+
+    var currentQuantity = parseInt(label.textContent);
+
+    if (operation === "decrease") 
+    {
+        if (currentQuantity > 1) 
+        {
+            currentQuantity -= 1;  
+        }
+    } 
+    else if (operation === "increase") 
+    {
+        if (currentQuantity < maxQuantity) 
+        {
+            currentQuantity += 1;
+        }
+    }
+
+    label.textContent = currentQuantity;
+
+    // Calculer le prix du produit
+    var calcPrice = price * currentQuantity;
+    priceElement.innerText = calcPrice.toFixed(2) + " €";
+
+    // Mettre à jour le prix total de la commande
+    totalOrderPrice = 0; // Réinitialiser le prix total
+    var allPriceElements = document.querySelectorAll('[id^="price "]');
+    
+    allPriceElements.forEach(function(priceElement) {
+        var priceValue = parseFloat(priceElement.textContent);
+        totalOrderPrice += priceValue;
+    });
+
+    totalPriceElement.innerText = totalOrderPrice.toFixed(2) + " €";
+}
+
+/**
+ * Effet de fondu sur les Flash. 
+ */
+document.addEventListener('DOMContentLoaded', function()
+{
+    const alerts = document.querySelectorAll('[data-alert]');
+    
+    alerts.forEach(item => 
+    { 
+        setTimeout(() => 
+        {
+            
+            item.style.opacity = '1';
+            item.style.transition = 'opacity 1s ease-in-out';
+            item.style.opacity = '0';
+            
+            item.addEventListener('transitionend', () => 
+            {
+                item.parentElement.remove(); 
+            });
+        }, 1000); 
+    });
+});
+
+/**
+ * Rendre inactif le bouton si les politiques de ventes ne sont pas cochées
+ */
+ // Fonction pour activer/désactiver le bouton en fonction de la case à cocher
+ function disableButton() {
+    document.addEventListener('DOMContentLoaded', function() 
+    {
+        var checkbox = document.getElementById('flexCheckDefault');
+        var orderButton = document.getElementById('orderButton');
+
+        // Activer/désactiver le bouton en fonction de l'état de la checkbox
+        checkbox.addEventListener('change', function() {
+            orderButton.disabled = !this.checked;
+        });
+    });
+}
+
+// Fonction de redirection ou affichage de notification si la checkbox n'est pas cochée
+function redirectToOrder(chemin) 
+{
+    var orderButton = document.getElementById('orderButton');
+    
+    if (!orderButton.disabled) 
+    {
+        window.location.href = chemin;
+    }
+}
+
+disableButton();

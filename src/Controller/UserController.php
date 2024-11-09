@@ -4,36 +4,42 @@ namespace App\Controller;
 
 use App\Form\CompteType;
 use App\Entity\Utilisateur;
-use App\Repository\MarqueRepository;
-use App\Repository\CategorieRepository;
 use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Security\Core\Security;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\HttpFoundation\{Request,Response};
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
+use App\Repository\{PanierRepository,CategorieRepository,ArticleFavoriRepository,MarqueRepository};
 
 class UserController extends AbstractController
 {
     private MarqueRepository $repositoryMarque; 
     private CategorieRepository $repositoryCategorie;
+    private ArticleFavoriRepository $repositoryArticlesFavoris;
+    private PanierRepository $repositoryPanier;
 
     private array $marques; 
     private array $categories;
+    private array $articlesFavoris;
+    private array $panier;
 
     /**
      * Constructeur de la classe
      *
      * @param MarqueRepository $repositoryMarque
      * @param CategorieRepository $repositoryCategorie
+     * @param ArticleFavoriRepository $repositoryArticlesFavoris
      */
-    public function __construct(MarqueRepository $repositoryMarque,CategorieRepository $repositoryCategorie)
+    public function __construct(MarqueRepository $repositoryMarque,CategorieRepository $repositoryCategorie, ArticleFavoriRepository $repositoryArticlesFavoris, PanierRepository $repositoryPanier)
     {
-        $this->repositoryMarque         = $repositoryMarque;
-        $this->repositoryCategorie      = $repositoryCategorie;
+        $this->repositoryMarque          = $repositoryMarque;
+        $this->repositoryCategorie       = $repositoryCategorie;
+        $this->repositoryArticlesFavoris = $repositoryArticlesFavoris;
+        $this->repositoryPanier          = $repositoryPanier;
 
-        $this->marques = $this->repositoryMarque->findAll();
+        $this->marques = $this->repositoryMarque->findBy([], ['nomMarque' => 'ASC']);
         $this->categories = $this->repositoryCategorie->findAll();
     }
 
@@ -47,10 +53,13 @@ class UserController extends AbstractController
      * @param UserPasswordHasherInterface $hasher
      * @return Response
      */
-    #[Route('/mon_compte/{id}', name:'edition.compte', methods:['GET', 'POST'])]
+    #[Security('is_granted("ROLE_USER") or is_granted("ROLE_ADMIN")')]
     #[ParamConverter('user', class: 'App\Entity\Utilisateur')]
-    public function modifierUtilisateur(Utilisateur $user, Request $request, EntityManagerInterface $manager, UserPasswordHasherInterface $hasher): Response
+    #[Route('/mon_compte/{id}', name:'edition.compte', methods:['GET', 'POST'])]
+    public function ModifyUser(Utilisateur $user, Request $request, EntityManagerInterface $manager, UserPasswordHasherInterface $hasher): Response
     {
+        $this->articlesFavoris = $this->repositoryArticlesFavoris->findBy(['utilisateur' => $this->getUser()]);
+        $this->panier = $this->repositoryPanier->findBy(['utilisateur' => $this->getUser()]);
 
         // Si l'utilisateur n'est pas connecté, on le redirige vers la page de connexion
         if(!$this->getUser())
@@ -90,10 +99,11 @@ class UserController extends AbstractController
         }
         else if ($form->isSubmitted() && !$form->isValid())
         {
-            $this->addFlash('danger', 'Veuillez vérifier les informations saisies.');
+            $this->addFlash('error', 'Veuillez vérifier les informations saisies.');
         }
     
         return $this->render('security/compte.html.twig', ['marques' => $this->marques,'categories' => $this->categories,
-                                                            'user' => $this->getUser(),'form' => $form->createView()]);
+                                                           'user' => $this->getUser(),'form' => $form->createView(), 'articlesFavoris' => $this->articlesFavoris,
+                                                           'panier' => $this->panier]);
     } 
 }

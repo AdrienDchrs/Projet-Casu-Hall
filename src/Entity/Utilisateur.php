@@ -2,7 +2,6 @@
 
 namespace App\Entity;
 
-use DateTimeImmutable;
 use Doctrine\ORM\Mapping as ORM;
 use App\Validator\StrongPassword;
 use App\Repository\UtilisateurRepository;
@@ -67,7 +66,7 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column]
     #[Assert\NotNull()]
     private array $roles = [];
- 
+
     /**
      * Getters et Setters
      */

@@ -1,0 +1,65 @@
+{% extends "base.html.twig" %}
+
+{% block title %} Casu'Hall - Mes articles favoris {% endblock %}
+
+{% block body %}
+    {% set alertTypes = {'success': 'success', 'warning': 'warning', 'error': 'danger'} %}
+    {% for type, cssClass in alertTypes %}
+        {% for message in app.flashes(type) %}
+            <div class="container-fluid d-flex align-items-center text-center justify-content-center mb-2 mt-3">
+                <div class="alert alert-dismissible alert-{{ cssClass }} text-center" data-alert>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    {{ message }}
+                </div>
+            </div>
+        {% endfor %}
+    {% endfor %}
+
+    {% set favoris = app.user ? articlesFavoris : emptyUserFavoris %}
+    {% if favoris|length > 0 %}
+        <div class="container">
+            <div class= "mt-3 mb-3"> 
+                <h4 class="p-2 mt-3 text-uppercase text-center fw-bold"> Mes articles favoris </h4>
+            </div> 
+            {% for articleFavori in favoris %}    
+                <div id="{{ app.user ? articleFavori.article.id : articleFavori.id }}" class="row mb-4 border border-2 shadow shadow-lg">
+                    <div class="col-md-4 p-0">
+                            {% set imageObject = app.user ? articleFavori.article : articleFavori %}
+                            <img src="{{ vich_uploader_asset(imageObject, 'imageFile') }}" alt="Image de l'article" class="img-fluid d-block img-favori">
+                    </div>
+
+                    <div class="col-md-6">
+                        <h4 class="text-uppercase mb-2 mt-4">
+                            {{ app.user ? articleFavori.article.nomArticle : articleFavori.nomArticle }}
+                        </h4>
+                        <hr>
+                        <h4 class="text-danger fw-bold mb-2">
+                            {{ app.user ? articleFavori.article.prix | number_format(2, '.', ' ') : articleFavori.prix | number_format(2, '.', ' ') }} €
+                        </h4>
+                        <hr>
+
+                        {% set description = app.user ? articleFavori.article.description : articleFavori.description %}
+                        <p class="text-justify">{{ description|length > 100 ? description|slice(0, 100) ~ '...' : description }}</p>
+                        
+                        <hr> 
+                        <h6>Taille {{ app.user ? articleFavori.article.taille : articleFavori.taille }}</h6>
+
+                        <div class="d-flex align-items-center justify-content-center">
+                            <a href="{{ path('article.ajouterPanier', {'id': app.user ? articleFavori.article.id : articleFavori.id}) }}" class="btn btn-light mb-2 mx-2 mt-5 border border-1 border-black"> 
+                                <img src="/assets/images/panier.png" class="img-fluid" alt="Ajouter au panier" title="Ajouter au panier">
+                            </a>
+                            <a href="{{ path('article.articleDetail', {'id': app.user ? articleFavori.article.id : articleFavori.id}) }}" class="btn btn-light border border-1 mb-2 mx-2 mt-5 border-black">
+                                <img src="/assets/images/oeil.png" class="img-fluid" alt="Voir le détail de l'article" title="Voir le détail de l'article">
+                            </a>
+                            <a href="{{ path('article.supprimerFavori', {'id': app.user ? articleFavori.article.id : articleFavori.id}) }}" class="btn btn-light mb-2 mx-2 mt-5 border border-1 border-black">
+                                <img src="/assets/images/supprimer.png" class="img-fluid" alt="Supprimer des favoris" title="Supprimer des favoris">
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        {% include "base/_notFoundPage.html.twig" with {sentence : "Vous n'avez pas d'articles en favoris pour le moment. "} only %}
+    {% endif %}
+{% endblock %}

@@ -11,7 +11,10 @@
                     <div class="dropdown-menu fade">
                         {% if not marques is same as([]) %}
                             {% for marque in marques %}
-                                <a id="menu-marques-{{ marque.idMarque }}" class="dropdown-item" href="{{  path('articles.articleMarque', {'id': marque.idMarque}) }}"> {{ marque.nomMarque }} </a>
+                                <a id="menu-marques-{{ marque.idMarque }}" class="dropdown-item d-flex" href="{{  path('articles.articleMarque', {'id': marque.idMarque}) }}"> 
+                                    <img src="{{ vich_uploader_asset(marque, 'imageFile') }}" class="img-fluid">
+                                    <span class="ms-2 mt-1"> {{ marque.nomMarque }}  </span>
+                                </a>
                             {% endfor %}
                         {% endif %}
                     </div>
@@ -23,7 +26,9 @@
                     <a class="nav-link dropdown-toggle mx-2" data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false"> Catégories </a>
                     <div class="dropdown-menu fade" id="categoryDropdown">
                         <a class="dropdown-item" href="{{ path('articles.all')}}"> Tous nos articles </a>
-                        <div class="dropdown-divider"> </div>
+                        <div class="text-center">
+                            <hr class="dropdown-divider w-50 mx-auto">
+                        </div>
                         {% for categorie in categories %}
                             <a id="menu-categorie-{{ categorie.idCategorie }}" class="dropdown-item" href="{{  path('articles.articleCategorie', {'id': categorie.idCategorie}) }}">{{ categorie.nomCategorie }}</a>
                         {% endfor %}
@@ -32,46 +37,52 @@
                 <li class="liste-effect nav-item">
                         <a class="nav-link mx-2" href="{{ path('home.contact') }}"> Nous contacter </a>
                 </li>
-                {% if is_granted('IS_AUTHENTICATED_FULLY') %}
+                {% if app.user %}
                     {% for role in user.roles %}
                         {% if role == "ROLE_ADMIN" %}
                             <li class="liste-effect nav-item dropdown">
-                                <a class="nav-link dropdown-toggle mx-2" data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false"> Ajouter un élément au site </a>
+                                <a class="nav-link dropdown-toggle mx-2" data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false"> Gestion de l'application </a>
                                 <div class="dropdown-menu fade">
                                     <a class="dropdown-item" href="{{ path('home.ajouter-article') }}"> Ajouter un article </a>
-                                    <a class="dropdown-item" href="{{ path('home.ajouter-categorie') }}"> Ajouter une catégorie </a>
                                     <a class="dropdown-item" href="{{ path('home.ajouter-marque') }}"> Ajouter une marque </a>
+                                    <a class="dropdown-item" href="{{ path('home.ajouter-categorie') }}"> Ajouter une catégorie </a>
                                 </div>
                             </li> 
                         {% endif %}
                     {% endfor %}
                 {% endif %}
             </ul>
-            <!-- 
-            <form class="d-flex mx-4">
-                <input class="form-control custom-width" type="search" placeholder="Rechercher...">
-                <button class="btn my-2 my-sm-0 custom-click" type="submit">
-                    <img src = "/assets/images/loupe.png" alt="search">
-                </button> 
-            </form> -->
 
-            <div class="nav-item mx-2">
-                <a href = "#"> <img src= "/assets/images/panier.png" alt="panier" title="Mon panier"> </a> 
+            <div class="navbar-nav flex-row mt-3">
+                <div class="nav-item mx-2 position-relative ms-2">
+                    {% set chemin = "/assets/images/panier" %}
+                    {% set chemin = chemin ~ (app.user ? (panier|length > 0 ? "_rempli.png" : ".png") : (emptyUserPanier|length > 0 ? "_rempli.png" : ".png")) %}
+                    <a href="{{ path('home.panier') }}" class="d-inline-block"> <img src ="{{ chemin }}" alt="panier" title="Mon panier"> </a> 
+                </div>
+
+                <div class="nav-item mx-2 ms-2">
+                    {% set chemin = "/assets/images/favori_" %}
+                    {% set chemin = chemin ~ (app.user ? (articlesFavoris|length > 0 ? "plein.png" : "vide.png") : (emptyUserFavoris|length > 0 ? "plein.png" : "vide.png")) %}
+                
+                    <a href="{{  path('articles-favoris') }}"> 
+                        <img src= {{ chemin }} alt="favori" title="Mes articles favoris">
+                    </a>
+                </div>
+
+                {% if app.user %}
+                    <div class="nav-item mx-2 ms-2">
+                        <a href = "{{  path('edition.compte', {'id': app.user.id}) }}"> <img src="/assets/images/connexion.png" alt="compte" title="Mon espace personnel"> </a> 
+                    </div>
+
+                    <div class="nav-item mx-2 ms-2">
+                        <a href = "{{ path('security.deconnexion') }}"> <img src="/assets/images/deconnexion.png" alt="deconnexion" title="Se déconnecter"> </a> 
+                    </div>
+                {% else %}
+                    <div class="nav-item mx-2">
+                        <a href = "{{ path('security.connexion') }}"> <img src="/assets/images/connexion.png" alt="connexion" title="Se connecter"> </a> 
+                    </div>
+                {% endif %}
             </div>
-
-            {% if app.user %}
-                <div class="nav-item mx-2">
-                    <a href = "{{  path('edition.compte', {'id': app.user.id}) }}"> <img src="/assets/images/connexion.png" alt="compte" title="Mon compte"> </a> 
-                </div>
-
-                <div class="nav-item mx-2">
-                    <a href = "{{ path('security.deconnexion') }}"> <img src="/assets/images/deconnexion.png" alt="deconnexion" title="Se déconnecter"> </a> 
-                </div>
-            {% else %}
-                <div class="nav-item mx-2">
-                    <a href = "{{ path('security.connexion') }}"> <img src="/assets/images/connexion.png" alt="connexion" title="Se connecter"> </a> 
-                </div>
-            {% endif %}
         </div>
     </div>
 </nav>
@@ -94,10 +105,19 @@
             <div class="carousel-item {% if isActive %}active{% endif %}">
                 <div class="container-fluid bg-black d-flex align-items-center justify-content-center" id="{{ i }}">
                     <img class="img-carrousel" src="/assets/images/CasuHall_WHITE.png">
-                    <h3 class="text-center text-white p-2 text-uppercase"> <i>{{ sentences[i] }}</i> </h3>
+                    <h3 class="text-center text-white p-2 text-uppercase">{{ sentences[i] }}</h3>
                     <img class="img-carrousel" src="/assets/images/CasuHall_WHITE.png">
                 </div>
             </div>
         {% endfor %}
     </div> 
 </div>  
+
+<!-- 
+<nav aria-label="breadcrumb" class="mt-4 ms-2">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="#">Accueil</a></li>
+        <li class="breadcrumb-item"><a href="#">Catégorie</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Sous-catégorie</li>
+    </ol>
+</nav> -->

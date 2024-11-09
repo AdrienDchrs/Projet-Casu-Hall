@@ -3,19 +3,21 @@
 namespace App\Form;
 
 use App\Entity\Marque;
-use Symfony\Component\Form\AbstractType;
-use Symfony\Component\Form\FormBuilderInterface;
+use Vich\UploaderBundle\Form\Type\VichImageType;
 use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Component\OptionsResolver\OptionsResolver;
-use Symfony\Component\Form\Extension\Core\Type\TextType;
-use Symfony\Component\Form\Extension\Core\Type\SubmitType;
-use Symfony\Component\Form\Extension\Core\Type\HiddenType;
+use Symfony\Component\Form\{AbstractType,FormBuilderInterface};
+use Symfony\Component\Form\Extension\Core\Type\{SubmitType,HiddenType,TextType};
 
 class MarqueType extends AbstractType
 {
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
+            ->add('action', HiddenType::class, [
+                'mapped' => false,
+                'attr' => ['id' => 'marque_action']
+            ])    
             ->add('nomMarque', TextType::class, [
                 'attr'          => [
                     'minlength'     => '4', 
@@ -24,7 +26,7 @@ class MarqueType extends AbstractType
                     'id'            => 'nom',
                     'class'         => 'p-2 border rounded mb-2'
                     ],
-                'label' => 'Nom de la marque : *',
+                'label' => 'Nom : *',
                 'label_attr' => [
                     'class' => 'fw-bold mb-1',
                     'id'    => 'nom',
@@ -36,18 +38,32 @@ class MarqueType extends AbstractType
                     new Assert\NotNull()
                 ]
             ])
-            ->add('action', HiddenType::class, [
-                'mapped' => false,
-                'attr' => ['id' => 'marque_action']
+            ->add('imageFile', VichImageType::class, [
+                'attr' => [
+                    'for' => 'image',
+                    'id' => 'image',
+                    'class' => 'form-control-file mb-4'
+                ],
+                'label' => 'Logo : *',
+                'label_attr' => [
+                    'class' => 'fw-bold mb-2',
+                    'id' => 'image',
+                    'for' => 'image',
+                ],
+                'download_uri' => false,
+                'image_uri' => false,
+                'delete_label' => false,
+                'allow_delete' => false, 
+                'required' => true,
             ])
             ->add('addBrand', SubmitType::class, [
                 'label'     => 'Ajouter la marque', 
-                'attr'      => ['class' => 'btn btn-outline-dark', 'onclick' => 'document.getElementById("marque_action").value = "add";']
+                'attr'      => ['class' => 'btn btn-outline-success', 'onclick' => 'document.getElementById("marque_action").value = "add";']
             ])
 
             ->add('deleteBrand', SubmitType::class, [
                 'label'     => 'Supprimer la marque', 
-                'attr'      => ['class' => 'btn btn-outline-dark', 'onclick' => 'document.getElementById("marque_action").value = "delete";']
+                'attr'      => ['class' => 'btn btn-outline-danger', 'onclick' => 'document.getElementById("marque_action").value = "delete";']
             ]);
     }
 

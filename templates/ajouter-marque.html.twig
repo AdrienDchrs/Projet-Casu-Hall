@@ -3,17 +3,33 @@
 {% block title %} Casu'Hall - Ajouter une marque {% endblock %}
 
 {% block body %}
-    <div class = "text-center"> 
-        <h4 class = "p-2 mt-5 text-uppercase fw-bold mb-4"> Ajouter une marque </h4>
-    </div>
+    {% set alertTypes = {'success': 'success', 'warning': 'warning', 'error': 'danger'} %}
+    {% for type, cssClass in alertTypes %}
+        {% for message in app.flashes(type) %}
+            <div class="container-fluid d-flex align-items-center text-center justify-content-center mb-2 mt-3">
+                <div class="alert alert-dismissible alert-{{ cssClass }} text-center" data-alert>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    {{ message }}
+                </div>
+            </div>
+        {% endfor %}
+    {% endfor %}
+
+    <h4 class = "p-2 mt-3 text-uppercase fw-bold mb-4 text-center"> Ajouter une marque </h4>
     <div class="container d-flex align-items-center mb-4 mt-5">
-        <div class="p-4 border border-black bg-light rounded mx-auto">
+        <div class="p-4 border border-black bg-light rounded mx-auto shadow shadow-lg">
             {{ form_start(form) }}
                 {{ form_widget(form.action) }}
                 <div class="row mb-2">
                     {{ form_label(form.nomMarque)}}
                     {{ form_widget(form.nomMarque)}}
                 </div> 
+
+                <div class="row mb-2">
+                    {{ form_label(form.imageFile)}}
+                    {{ form_widget(form.imageFile)}}
+                </div> 
+
                 <div class="row">
                     <div class="btn-group" role="group">
                         {{ form_widget(form.addBrand) }}
@@ -23,23 +39,4 @@
             {{ form_end(form) }}
         </div>
     </div>
-
-    {% for message in app.flashes('AddOrDeleteBrand') %}
-        <div class="container d-flex align-items-center text-center justify-content-center mb-2 mt-3">
-            <div class="alert alert-dismissible alert-success">
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                {{ message }}
-            </div>
-        </div>
-    {% endfor %}
-
-    {% for message in app.flashes('errorBrand') %}
-        <div class="container d-flex align-items-center text-center justify-content-center mb-2 mt-3">
-            <div class="alert alert-dismissible alert-danger">
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                {{ message }}
-            </div>
-        </div>
-    {% endfor %}
-
 {% endblock %}

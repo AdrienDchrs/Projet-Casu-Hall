@@ -1,0 +1,10 @@
+{% if form|default(false) %}
+    {{ form_start(form) }}
+    <div class="input-group mb-3">
+        <button type="submit" class="shadow shadow-md"> 
+            <span class="material-symbols-outlined">search</span> 
+        </button>
+        {{ form_widget(form.query) }}
+    </div>
+    {{ form_end(form) }}
+{% endif %}
