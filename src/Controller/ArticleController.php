@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Model\SearchData;
+use App\Service\CookieService;
 use Doctrine\ORM\EntityManagerInterface;
 use Knp\Component\Pager\PaginatorInterface;
 use App\Form\{ModifierArticleType,SearchType};
@@ -35,6 +36,8 @@ class ArticleController extends AbstractController
 
     private EntityManagerInterface $manager;
 
+    private CookieService $cookieService;
+
     /**
      * Constructeur
      * @param MarqueRepository $repositoryMarque
@@ -44,7 +47,7 @@ class ArticleController extends AbstractController
      * @param PaginatorInterface $paginator
      * @param EntityManagerInterface $manager
      */
-    public function __construct(MarqueRepository $repositoryMarque,CategorieRepository $repositoryCategorie, ArticleRepository $repositoryArticle, PaginatorInterface $paginator, EntityManagerInterface $manager, ArticleFavoriRepository $repositoryArticleFavori, PanierRepository $repositoryPanier)
+    public function __construct(MarqueRepository $repositoryMarque,CategorieRepository $repositoryCategorie, ArticleRepository $repositoryArticle, PaginatorInterface $paginator, EntityManagerInterface $manager, ArticleFavoriRepository $repositoryArticleFavori, PanierRepository $repositoryPanier, CookieService $cookieService)
     {
         $this->repositoryMarque = $repositoryMarque;
         $this->repositoryPanier = $repositoryPanier;
@@ -58,6 +61,8 @@ class ArticleController extends AbstractController
 
         $this->paginator = $paginator;
         $this->manager = $manager;
+
+        $this->cookieService = $cookieService;
     }
 
     /**
@@ -75,12 +80,12 @@ class ArticleController extends AbstractController
         if($user)
         {    
             $this->articlesFavoris = $this->repositoryArticleFavori->findBy(['utilisateur' => $user]);
-            $this->panier = $this->repositoryPanier->findBy(['utilisateur' => $user]);
+            $this->panier = $this->repositoryPanier->findBy(['utilisateur' => $user, "isDone" => false]);
         }
         else 
         {
-            $this->emptyUserFavoris = $this->getCookieUserNotConnected($request,'favoris',$this->emptyUserFavoris);
-            $this->emptyUserPanier = $this->getCookieUserNotConnected($request,'panier',$this->emptyUserPanier);
+            $this->emptyUserFavoris = $this->cookieService->getCookieUserNotConnected($request,'favoris',$this->emptyUserFavoris);
+            $this->emptyUserPanier = $this->cookieService->getCookieUserNotConnected($request,'panier',$this->emptyUserPanier);
         }
 
         $searchData = new SearchData();
@@ -123,12 +128,12 @@ class ArticleController extends AbstractController
         if($user)
         {
             $this->articlesFavoris = $this->repositoryArticleFavori->findBy(['utilisateur' => $user]);
-            $this->panier = $this->repositoryPanier->findBy(['utilisateur' => $user]);
+            $this->panier = $this->repositoryPanier->findBy(['utilisateur' => $user, "isDone" => false]);
         }
         else 
         {
-            $this->emptyUserFavoris = $this->getCookieUserNotConnected($request,'favoris',$this->emptyUserFavoris);
-            $this->emptyUserPanier = $this->getCookieUserNotConnected($request,'panier',$this->emptyUserPanier);
+            $this->emptyUserFavoris = $this->cookieService->getCookieUserNotConnected($request,'favoris',$this->emptyUserFavoris);
+            $this->emptyUserPanier = $this->cookieService->getCookieUserNotConnected($request,'panier',$this->emptyUserPanier);
         }
 
         $searchData = new SearchData();
@@ -175,12 +180,12 @@ class ArticleController extends AbstractController
         if($user)
         {
             $this->articlesFavoris = $this->repositoryArticleFavori->findBy(['utilisateur' => $user]);
-            $this->panier = $this->repositoryPanier->findBy(['utilisateur' => $user]);
+            $this->panier = $this->repositoryPanier->findBy(['utilisateur' => $user, "isDone" => false]);
         }
         else 
         {
-            $this->emptyUserFavoris = $this->getCookieUserNotConnected($request,'favoris',$this->emptyUserFavoris);
-            $this->emptyUserPanier = $this->getCookieUserNotConnected($request,'panier',$this->emptyUserPanier);
+            $this->emptyUserFavoris = $this->cookieService->getCookieUserNotConnected($request,'favoris',$this->emptyUserFavoris);
+            $this->emptyUserPanier = $this->cookieService->getCookieUserNotConnected($request,'panier',$this->emptyUserPanier);
         }
 
         $searchData = new SearchData();
@@ -223,12 +228,12 @@ class ArticleController extends AbstractController
         if($user)
         {
             $this->articlesFavoris = $this->repositoryArticleFavori->findBy(['utilisateur' => $user]);
-            $this->panier = $this->repositoryPanier->findBy(['utilisateur' => $user]);
+            $this->panier = $this->repositoryPanier->findBy(['utilisateur' => $user, "isDone" => false]);
         }
         else
         { 
-            $this->emptyUserFavoris = $this->getCookieUserNotConnected($request,'favoris',$this->emptyUserFavoris);
-            $this->emptyUserPanier = $this->getCookieUserNotConnected($request,'panier',$this->emptyUserPanier);  
+            $this->emptyUserFavoris = $this->cookieService->getCookieUserNotConnected($request,'favoris',$this->emptyUserFavoris);
+            $this->emptyUserPanier = $this->cookieService->getCookieUserNotConnected($request,'panier',$this->emptyUserPanier);  
         }
 
         $nomMarque = $this->repositoryArticle->find($article->getId())->getIdMarque()->getNomMarque();
@@ -253,7 +258,7 @@ class ArticleController extends AbstractController
     public function ModifyArticle(Article $article, Request $request): Response
     {
         $this->articlesFavoris = $this->repositoryArticleFavori->findBy(['utilisateur' => $this->getUser()]);
-        $this->panier = $this->repositoryPanier->findBy(['utilisateur' => $this->getUser()]);
+        $this->panier = $this->repositoryPanier->findBy(['utilisateur' => $this->getUser(), "isDone" => false]);
 
         $form = $this->createForm(ModifierArticleType::class, $article, ['marques' => $this->marques, 'categories' => $this->categories]);
         $form->handleRequest($request);
@@ -265,13 +270,13 @@ class ArticleController extends AbstractController
             $this->manager->persist($articleModifie);
             $this->manager->flush();
             
-            $this->addFlash('success', 'L\'article a bien été modifié !');
+            $this->addFlash('success', 'L\'article a été mis à jour avec succès !');
             
             return $this->redirectToRoute('article.articleDetail', ['id' => $article->getId()]);
         }
         else if($form->isSubmitted() && !$form->isValid())
         {
-            $this->addFlash('error', 'Erreur de saisies lors de la modification de l\'article ! Veuillez réessayer.');
+            $this->addFlash('error', 'Erreur(s) de saisie(s) lors de la mise à jour de l\'article ! Veuillez réessayer.');
         }
 
         return $this->render('articles/modifier-article.html.twig', ['articles' => $this->articles,'marques' => $this->marques,
@@ -356,7 +361,7 @@ class ArticleController extends AbstractController
                 $this->addFlash('success', 'L\'article a bien été ajouté à vos favoris !');
 
                 $this->articlesFavoris = $this->repositoryArticleFavori->findBy(['utilisateur' => $user]);
-                $this->panier = $this->repositoryPanier->findBy(['utilisateur' => $user]);            
+                $this->panier = $this->repositoryPanier->findBy(['utilisateur' => $this->getUser(), "isDone" => false]);            
             }
         }
         else 
@@ -418,25 +423,8 @@ class ArticleController extends AbstractController
                 return ['Bon état','Très peu de défauts, aucune déchirure significative.','Tâches très légères, pas immédiatement visibles.',
                         'Usure légère, tissu encore en bon état.','Porté avec soin, apparence générale satisfaisante.'];
             case 5:
-                return ['Très bon état voir neuf','Aucun défaut structurel, ni trou ni déchirure.','Aucune tâche visible, aspect pre.','Usure quasi inexistante, tissu presque neuf.',
+                return ['Très bon état voir neuf','Aucun défaut structurel, ni trou ni déchirure.','Aucune tâche visible, aspect presque neuf.','Usure quasi inexistante, tissu presque neuf.',
                         'Aspect général très soigné, peut être porté sans souci.'];
         }
-    }
-
-    /** 
-     * Fonction privée qui permet de récupérer les favoris d'un utilisateur non connecté
-     * @param Request $request sert à établir une requête HTTP pour récupérer les cookies de la session.
-     */
-    private function getCookieUserNotConnected(Request $request, $cookieName, $array)
-    {
-
-        $cookie = json_decode($request->cookies->get($cookieName, '[]'), true);
-            
-        if(!empty($cookie))
-            $array = $this->manager->getRepository(Article::class)->findBy(['id' => $cookie]);
-        else 
-            $array = [];
-
-        return $array; 
     }
 }

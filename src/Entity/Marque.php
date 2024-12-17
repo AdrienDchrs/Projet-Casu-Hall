@@ -20,9 +20,9 @@ class Marque
     #[Assert\NotNull()]
     #[Assert\NotBlank()]
     #[ORM\Column(length: 50)]
-    #[Assert\Length(min: 4, max:50)]
+    #[Assert\Length(max:50)]
     private ?string $nomMarque = null;
-
+    
     #[Vich\UploadableField(mapping: 'articles_images', fileNameProperty: 'imageMarque')]
     private ?File $imageFile = null;
 
@@ -35,7 +35,7 @@ class Marque
     public function getIdMarque(): ?int         {   return $this->idMarque; }
     public function getNomMarque(): ?string     {   return $this->nomMarque;}
     public function getImageFile(): ?File       {   return $this->imageFile; }
-    public function getImageMarque(): ?string     {   return $this->imageMarque; }
+    public function getImageMarque(): ?string   {   return $this->imageMarque; }
 
 
     public function setNomMarque(string $nomMarque): static

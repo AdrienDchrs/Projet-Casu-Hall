@@ -15,11 +15,6 @@
 }
 
 /* Page -> header.html.twig, footer.html.twig */
-.image-container 
-{
-    position: relative;
-}
-
 .img-carrousel
 {
     width:64px;
@@ -69,8 +64,29 @@
 
 
 /* Page -> articles-favoris.html.twig */ 
-.img-favori
+.resize-image
 {
-    width: 280px; 
-    height: 180px;
+    width: 270px; 
+    height: 270px;
+}
+
+/* Page -> compte.html.twig */
+.floating-image {
+    animation: float 2s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+/* Page -> notre-histoire.html.twig */ 
+#history-indent
+{
+    text-indent: 2em;
+    text-align: justify;
 }

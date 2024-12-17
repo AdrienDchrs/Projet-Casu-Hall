@@ -4,10 +4,12 @@ namespace App\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 use App\Repository\ArticleRepository;
-use Symfony\Component\HttpFoundation\File\File;
+use Doctrine\Common\Collections\Collection;
+use Doctrine\Common\Collections\ArrayCollection;
 use Vich\UploaderBundle\Mapping\Annotation as Vich;
 use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
+
 
 #[Vich\Uploadable]
 #[UniqueEntity('nomArticle')]
@@ -48,12 +50,6 @@ class Article
     #[Assert\NotBlank()]
     private ?string $description = null;
 
-    #[Vich\UploadableField(mapping: 'articles_images', fileNameProperty: 'imageName')]
-    private ?File $imageFile = null;
-
-    #[ORM\Column(type: 'string', nullable: false)]
-    private ?string $imageName = null;
-
     #[ORM\Column]
     #[Assert\NotNull()]
     #[Assert\NotBlank()]
@@ -70,6 +66,14 @@ class Article
     #[ORM\ManyToOne(targetEntity: Marque::class)]    
     #[ORM\JoinColumn(name: 'id_marque', referencedColumnName: 'id_marque', nullable: false)]
     private ?Marque $idMarque = null;
+
+    #[ORM\OneToMany(mappedBy: 'articles', targetEntity: Image::class, orphanRemoval: true, cascade:['persist'])]
+    private $images;
+
+    public function __construct()
+    {
+        $this->images = new ArrayCollection();
+    }
     
     /**
      * Getters et Setters
@@ -83,19 +87,7 @@ class Article
     public function getQuantiteStock(): ?int        { return $this->quantite_stock; }
     public function getDescription(): ?string       { return $this->description;    }
     public function getNote(): ?int                 { return $this->note;           }
-    public function getImageFile(): ?File           { return $this->imageFile;      }
-    public function getImageName(): ?string         { return $this->imageName;      }
-
-    public function setImageFile(?File $imageFile = null): void
-    {
-        $this->imageFile = $imageFile;
-    }
-
-    public function setImageName(?string $imageName): void
-    {
-        $this->imageName = $imageName;
-    }
-
+    public function getImages(): ?Collection        { return $this->images;         }
 
     public function setNomArticle(string $nomArticle): static
     {
@@ -139,16 +131,36 @@ class Article
         return $this;
     }
 
-    public function setIdCategorie(Categorie $idCategorie): self
+    public function setIdCategorie(?Categorie $idCategorie): self
     {
         $this->idCategorie = $idCategorie;
 
         return $this;
     }
 
-    public function setIdMarque(Marque $idMarque): self
+    public function setIdMarque(?Marque $idMarque): self
     {
         $this->idMarque = $idMarque;
+
+        return $this;
+    }
+
+    public function addImage(Image $image): self
+    {
+        if(!$this->images->contains($image))
+        {
+            $this->images[] = $image;
+            $image->setArticle($this);
+        }
+
+        return $this;
+    }
+
+    public function removeImage(Image $image): self
+    {
+        if ($this->images->removeElement($image)) 
+            if ($image->getArticles() === $this) 
+                $image->setArticle(null);
 
         return $this;
     }

@@ -22,40 +22,31 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
     private ?int $id = null;
 
     #[ORM\Column]
-    #[Assert\NotNull()]
     #[Assert\NotBlank()]
-    #[Assert\Length(min: 1, max:1)]
-    private ?bool $civilite = null;
+    #[Assert\Choice(choices: [0,1])]
+    private ?int $civilite = 0;
 
-    #[Assert\NotNull()]
     #[Assert\NotBlank()] 
     #[ORM\Column(length: 50)]
-    #[Assert\Length(min: 3, max:50)]
+    #[Assert\Length(min: 2, max:50)]
     private ?string $nomUtilisateur = null;
 
-    #[Assert\NotNull()]
     #[Assert\NotBlank()]
     #[ORM\Column(length: 50)]
     #[Assert\Length(min: 3, max:50)]
     private ?string $prenomUtilisateur = null;
 
     #[ORM\Column()]
-    #[Assert\NotNull()]
     #[Assert\NotBlank()]
     private ?\DateTimeImmutable $dateNaissance = null;
 
     #[Assert\Email()]
-    #[Assert\NotNull()]
     #[Assert\NotBlank()]
-    #[Assert\Length(min: 10, max:100)]
+    #[Assert\Length(min: 6, max:100)]
     #[ORM\Column(length: 100, unique: true)]
     private ?string $email = null;
 
-    #[ORM\Column(nullable: true)]
-    private ?string $telephone = null;
-
     #[ORM\Column]
-    #[Assert\NotNull()]
     #[Assert\NotBlank()]
     #[Assert\Length(min:8)]
     private ?string $password = 'password';
@@ -64,8 +55,8 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
     private ?string $plainPassword = null;
 
     #[ORM\Column]
-    #[Assert\NotNull()]
-    private array $roles = [];
+    #[Assert\NotBlank()]
+    private array $roles = ['ROLE_USER'];
 
     /**
      * Getters et Setters
@@ -78,8 +69,7 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
     public function getNomUtilisateur(): ?string            { return $this->nomUtilisateur;     }
     public function getPrenomUtilisateur(): ?string         { return $this->prenomUtilisateur;  }
     public function getRoles(): array                       { return array_unique($this->roles);}
-    public function getCivilite(): ?bool                    { return $this->civilite;           }
-    public function getTelephone(): ?string                 { return $this->telephone;          }
+    public function getCivilite(): ?int                     { return $this->civilite;           }
     public function getDateNaissance(): ?\DateTimeImmutable { return $this->dateNaissance;      }
 
     public function setEmail(string $email): static
@@ -133,13 +123,6 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
     public function setCivilite(bool $civilite): static
     {
         $this->civilite = $civilite;
-
-        return $this;
-    }
-
-    public function setTelephone(string $telephone): static
-    {
-        $this->telephone = $telephone;
 
         return $this;
     }

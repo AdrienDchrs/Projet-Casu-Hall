@@ -1,4 +1,4 @@
-{% extends 'base.html.twig' %}
+{% extends 'base/base.html.twig' %}
 
 {% block title %} Casu-Hall - Réinitialisation du mot de passe {% endblock %}
 
@@ -11,8 +11,9 @@
             <div class="alert alert-dismissible alert-warning">
                 <h4 class="alert-heading">Un e-mail vient d'être envoyé contenant un lien que vous pouvez utiliser pour réinitialiser votre mot de passe. </h4>
                 <p class="mb-2 mt-4"> Si vous ne recevez pas de mail, veuillez regarder dans vos spams ou 
-                    <a href="{{ path('app_forgot_password_request') }}" class="text-black fw-bold"> retentez une réinitialisation</a>.
+                    <a href="{{ path('app_forgot_password_request') }}" class="text-black fw-bold"> retentez une réinitialisation</a>. 
                 </p>
+                <p> Il se peut que vous ne soyez pas présente dans notre base de données et dans ce cas, contactez le support. </p> 
                 <p> Ce lien expirera dans 1 heure.</p>
             </div>    
         </div>

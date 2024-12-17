@@ -7,7 +7,7 @@ use Vich\UploaderBundle\Form\Type\VichImageType;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Component\Form\{AbstractType,FormBuilderInterface};
-use Symfony\Component\Form\Extension\Core\Type\{TextType,SubmitType,ChoiceType,NumberType,IntegerType,TextareaType};
+use Symfony\Component\Form\Extension\Core\Type\{TextType,SubmitType,ChoiceType,NumberType,IntegerType,TextareaType,FileType};
 
 class ArticleType extends AbstractType
 {
@@ -122,28 +122,41 @@ class ArticleType extends AbstractType
                     new Assert\NotNull()
                 ]
             ])
-            ->add('imageFile', VichImageType::class, [
-                'attr' => [
-                    'for' => 'image',
-                    'id' => 'image',
-                    'class' => 'form-control-file mb-2'
-                ],
-                'label' => 'Image : *',
-                'label_attr' => [
-                    'class' => 'fw-bold mb-2',
-                    'id' => 'image',
-                    'for' => 'image',
-                ],
-                'download_uri' => false,
-                'image_uri' => false,
-                'imagine_pattern' => 'large',
-                'delete_label' => false,
-                'allow_delete' => false,
-                'constraints'   => [
-                    new Assert\NotBlank(),
-                    new Assert\NotNull()
-                ]
-            ])
+            // ->add('imageFile', VichImageType::class, [
+            //     'attr' => [
+            //         'for' => 'image',
+            //         'id' => 'image',
+            //         'class' => 'form-control-file mb-2'
+            //     ],
+            //     'label' => 'Image : *',
+            //     'label_attr' => [
+            //         'class' => 'fw-bold mb-2',
+            //         'id' => 'image',
+            //         'for' => 'image',
+            //     ],
+            //     'download_uri' => false,
+            //     'image_uri' => false,
+            //     'imagine_pattern' => 'large',
+            //     'delete_label' => false,
+            //     'allow_delete' => false,
+            //     'constraints'   => [
+            //         new Assert\NotBlank(),
+            //         new Assert\NotNull()
+            //     ]
+            // ])
+            ->add('images', FileType::class, [
+                    'attr' => [
+                        'for' => 'image',
+                        'id' => 'image',
+                        'class' => 'form-control mb-2'
+                    ],
+                    'multiple' => true,
+                    'mapped' => false,
+                    'constraints'   => [
+                        new Assert\NotBlank(),
+                        new Assert\NotNull()
+                    ]
+                ])
             ->add('note', IntegerType::class, [
                 'attr' => [
                     'for' => 'note',

@@ -1,123 +1,44 @@
-{% extends "base.html.twig" %}
+{% extends "base/base.html.twig" %}
 
-{% block title %} Casu'Hall - Mon compte {% endblock %}
+{% block title %} Casu'Hall - Mon espace personnel {% endblock %}
 
-{% block body %}
-     {% set alertTypes = {'success': 'success', 'warning': 'warning', 'error': 'danger'} %}
-    {% for type, cssClass in alertTypes %}
-        {% for message in app.flashes(type) %}
-            <div class="container-fluid d-flex align-items-center text-center justify-content-center mb-2 mt-3">
-                <div class="alert alert-dismissible alert-{{ cssClass }} text-center" data-alert>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    {{ message }}
-                </div>
+{% block body %}    
+    <nav aria-label="breadcrumb" style="--bs-breadcrumb-divider: url(&#34;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8'%3E%3Cpath d='M2.5 0L1 1.5 3.5 4 1 6.5 2.5 8l4-4-4-4z' fill='currentColor'/%3E%3C/svg%3E&#34;);" class="mt-3 ms-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ path('home.index')}}" class="text-black">Accueil</a></li>
+            <li class="breadcrumb-item active" aria-current="page"> Mon espace personnel </a></li>
+        </ol>
+    </nav>
+
+    <div class="container mt-2 mb-5">
+        <div class="row justify-content-center gx-4">
+            <div class="col-md-4">
+                <a href="{{ path('edition.informations.personnelles',{'id': app.user.id}) }}" class="text-decoration-none">
+                    <div class="p-4 shadow-lg border border-1 rounded bg-white h-100">
+                        <p class="fw-bold text-uppercase text-center fs-5 text-black">Mes informations générales</p>
+                        <img src="/assets/images/informations_generales.png" class="d-block mx-auto mt-5 floating-image img-fluid" alt="Informations générales">
+                        <p class="text-center mt-4 text-black">Dans cette rubrique, consultez vos coordonnées personnels et déconnectez-vous du site ici.</p>
+                    </div>
+                </a>
             </div>
-        {% endfor %}
-    {% endfor %}
-    
-    <div class="text-center"> 
-        <h4 class = "p-2 mt-3 text-uppercase fw-bold"> Mes Informations personnelles </h4>
-    </div>
-    {{ form_start(form)}}
-        {{ form_widget(form.action) }}
-        <div class="container border rounded mt-4 shadow shadow-lg">
-            <div class="d-flex align-items-center">
-                <h5 class="p-2 mt-3 text-uppercase fw-bold">Informations générales</h5>
-                <img src="/assets/images/identite.png" class="ms-3 mt-2" alt="identite"> 
+            <div class="col-md-4">
+                <a href="{{ path('edition.change_password',{'id': app.user.id}) }}" class="text-decoration-none">
+                    <div class="p-4 shadow-lg border border-1 rounded bg-white h-100">
+                        <p class="fw-bold text-uppercase text-center fs-5 text-black">Modifier mon mot de passe</p>
+                        <img src="/assets/images/password.png" class="d-block mx-auto mt-5 floating-image img-fluid" alt="Modifier mot de passe">
+                        <p class="text-center mt-4 text-black">Modifier votre mot de passe en toute sécurité. </p>
+                    </div>
+                </a>
             </div>
-            <div class="row mb-2">
-                <div class="col-md-6">
-                    <label for="prenomUtilisateur"> Civilité </label>
-                </div>
-                <div class="col-md-4">
-                    {% set genre = user.civilite ? "Monsieur" : "Madame" %}
-
-                    <input type="text" class="w-100 p-1" value="{{ genre }} " readonly>
-                </div>
-                <div class="col-md-6 mt-2">
-                    <label for="prenomUtilisateur"> Nom - Prénom </label>
-                </div>
-                <div class="col-md-4 mt-2">
-                    <input type="text" class="w-100 p-1" value="{{ user.nomUtilisateur }} {{ user.prenomUtilisateur }} " readonly>
-                </div>
-
-                <div class="col-md-6 mt-2">
-                    <label for="dateNaissance"> Date de naissance </label>
-                </div>
-                <div class="col-md-4 mt-2 mb-3 position-relative">
-                    <input type="date" class="w-100 p-1 pe-5" value="{{ user.dateNaissance|date('Y-m-d') }}" readonly>
-                    <img src="/assets/images/calendrier.png" alt="calendrier" class="position-absolute top-50 end-0 translate-middle-y me-3 icon-calendar">
-                </div>
+            <div class="col-md-4">
+                <a href="{{ path('edition.consultCommands',{'id': app.user.id}) }}" class="text-decoration-none">
+                    <div class="p-4 shadow-lg border border-1 rounded bg-white h-100">
+                        <p class="fw-bold text-uppercase text-center fs-5 text-black">Mes commandes effectuées</p>
+                        <img src="/assets/images/commande.png" class="d-block mx-auto mt-5 floating-image img-fluid" alt="Mes commandes effectuées">
+                        <p class="text-center mt-4 text-black">Vous retrouverez ici toutes les commandes que vous avez pu passer chez Casu'Hall.</p>
+                    </div>
+                </a>
             </div>
         </div>
-        <div class="container border rounded mt-4 shadow shadow-lg">
-            <div class="d-flex align-items-center">
-                <h5 class = "p-2 mt-3 text-uppercase fw-bold"> Coordonnées </h5>
-                <img src="/assets/images/coordonnees.png" class="ms-3" alt="coordonnees">
-            </div>
-            <div class="row mb-2">
-                <div class="col-md-6">
-                    <label for="adresse"> Adresse e-mail </label>
-                </div>
-                <div class="col-md-4 mb-2">
-                    <input type="email" class="w-100 p-1" value="{{ user.email }}" readonly>
-                </div>
-
-                <div class="col-md-6">
-                    {{ form_label(form.telephone) }}
-                </div>
-                <div class="col-md-4 mb-2">
-                    {{ form_widget(form.telephone, {'attr': {'value': user.telephone is not null ? user.telephone : '+33' }}) }}
-                    {{ form_errors(form.telephone) }}
-                </div>
-
-                <div class="d-flex justify-content-center mt-4 mb-3">
-                    {{ form_widget(form.modifyInformations) }}
-                </div>
-            </div>
-        </div>
-
-        <div class="container border rounded mt-4 mb-4 shadow shadow-lg">
-            <div class="d-flex align-items-center">
-                <h5 class="p-2 mt-3 text-uppercase fw-bold"> Changer le mot de passe </h5>
-                <img src="/assets/images/password.png" class="ms-3" alt="password">
-            </div>
-            <div class="row mb-2 mt-4">
-                <div class="col-md-6">
-                    {{ form_label(form.plainPassword.first) }}
-                </div>
-                <div class="col-md-4 mb-2">
-                    {{ form_widget(form.plainPassword.first) }}
-                </div>
-                <div class="col-md-6">
-                    {{ form_label(form.plainPassword.second) }}
-                </div>
-                <div class="col-md-4">
-                    {{ form_widget(form.plainPassword.second) }}
-                </div>
-            </div>
-
-            <small class="mb-4 fs-8 fst-italic">
-                Pour rappel, votre mot de passe doit contenir au moins <b>8 caractères, une majuscule, une minuscule, un chiffre et un caractère spécial</b>.
-            </small>
-
-            <div class="col-md-4 form-check mt-3 mb-4">
-                <input class="form-check-input" type="checkbox" value="" id="flexCheckDefault" onClick="afficherMotDePasse('compte_plainPassword_first','compte_plainPassword_second')">
-                <label class="form-check-label" for="flexCheckDefault"> Visualiser les mots de passe </label>
-            </div>
-            
-            <div class="d-flex justify-content-center mt-4 mb-3">
-                {{ form_widget(form.submit) }}
-            </div>
-        </div>
-    {{ form_end(form) }}
-
-    <div class="container border rounded mt-4 mb-4 shadow shadow-lg">
-        <h5 class = "p-2 mt-3 text-uppercase fw-bold"> Mes commandes </h5>
-        {# {% if panier|length > 0 %}
-            <!-- à remplir pour les commandes effectuées sur ce compte et cet utilisateur -->
-        {% else %} #}
-            <p> Aucunes commandes passées chez nous pour le moment. </p>
-        {# {% endif %} #} 
     </div>
 {% endblock %}

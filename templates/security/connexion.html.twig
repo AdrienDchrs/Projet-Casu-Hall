@@ -1,45 +1,8 @@
-{% extends "base.html.twig" %}
+{% extends "base/base.html.twig" %}
 
 {% block title %} Casu'Hall - Connexion {% endblock %}
 
 {% block body %}
-    <div class= "align-items-center text-center"> 
-        <h4 class = "p-2 mt-3 text-uppercase fw-bold"> Connexion </h4>
-    </div>
-    <div class="container d-flex align-items-center mb-2 mt-3">
-        <div class="p-4 border border-black bg-light rounded mx-auto shadow shadow-lg">
-            <form action="{{ path('security.connexion') }}" method="POST">
-                <div class="row">
-                    <label for="username" class="fw-bold mb-1"> Adresse e-mail : * </label>
-                    <input type="email" name="_username" id="_username" placeholder="exemple@gmail.com" required class="p-2 border rounded mb-2">
-                </div> 
-
-                <div class="row mt-2"> 
-                    <label for="password" id="password" class="fw-bold mb-1"> Mot de passe : *</label>
-                    <input type="password" name="_password" id="_password" placeholder="********" required class="p-2 border rounded mb-2">
-                </div>
-
-                <div class="form-check mt-1 mb-4">
-                    <input class="form-check-input" type="checkbox" id="flexCheckDefault" onClick="afficherMotDePasse('_password','_password')">
-                    <label class="form-check-label"> Visualiser le mot de passe </label> 
-                </div>
-
-                <div class="row">
-                    <button id="button" type="submit" class="btn btn-outline-dark"> Se connecter </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <div class="row align-items-center text-center mt-4 mb-3">
-        <div class="col-md-6 text-end"> 
-            <a href="{{ path('security.inscription') }}" class="btn btn-outline-dark shadow shadow-lg" role="button">Créer votre compte ici.</a>
-        </div>
-        <div class="col-md-6 text-start">
-            <a href="{{ path('app_forgot_password_request') }}" class="btn btn-outline-dark shadow shadow-lg" role="button">Mot de passe oublié ?</a>
-        </div>
-    </div>    
-
     {% if errors %}
         <div class="container d-flex align-items-center text-center justify-content-center mb-2 mt-3">
             <div class="alert alert-dismissible alert-danger" data-alert>
@@ -60,4 +23,52 @@
             </div>
         {% endfor %}
     {% endfor %}
+    <div class="container-fluid d-flex mt-5 mb-5 align-items-center justify-content-center">
+        <div class="row w-100 h-100 align-items-center">
+            <!-- Vidéo gauche -->
+            <div class="col-lg-4 d-none d-lg-flex justify-content-center">
+                <video autoplay muted loop playsinline>
+                    <source src="/assets/images/Video.mov" type="video/mp4">
+                    Votre navigateur ne prend pas en charge la lecture des vidéos.
+                </video>
+            </div>
+
+            <!-- Formulaire au centre -->
+            <div class="col-lg-4 d-flex flex-column align-items-center">
+                <div class="p-4 border border-black bg-light rounded shadow shadow-lg w-100" style="max-width: 400px;">
+                    <h4 class="text-center p-2 mb-3 text-uppercase fw-bold">Connexion</h4>
+                    <form action="{{ path('security.connexion') }}" method="POST">
+                        <div class="mb-3">
+                            <label for="username" class="fw-bold">Adresse e-mail :</label>
+                            <input type="email" name="_username" id="username" class="form-control" placeholder="exemple@gmail.com" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="password" class="fw-bold">Mot de passe :</label>
+                            <input type="password" name="_password" id="password" class="form-control" placeholder="********" required>
+                        </div>
+                        <div class="form-check mb-3">
+                            <input type="checkbox" class="form-check-input" id="showPassword" onclick="afficherMotDePasse('_password','_password')">
+                            <label class="form-check-label" for="showPassword">Visualiser le mot de passe</label>
+                        </div>
+                        <button type="submit" class="btn btn-outline-dark w-100">Se connecter</button>
+                    </form>
+                </div>
+
+                <!-- Boutons sous le formulaire -->
+                <div class="mt-4 text-center">
+                    <a href="{{ path('security.inscription') }}" class="btn btn-outline-dark shadow shadow-lg mx-2" role="button">Créer votre compte ici</a>
+                    <a href="{{ path('app_forgot_password_request') }}" class="btn btn-outline-dark shadow shadow-lg mx-2" role="button">Mot de passe oublié ?</a>
+                </div>
+            </div>
+
+            <!-- Vidéo droite -->
+            <div class="col-lg-4 d-none d-lg-flex justify-content-center">
+                <video autoplay muted loop playsinline>
+                    <source src="/assets/images/Video.mov" type="video/mp4">
+                    Votre navigateur ne prend pas en charge la lecture des vidéos.
+                </video>
+            </div>
+        </div>
+    </div>
+
 {% endblock %}

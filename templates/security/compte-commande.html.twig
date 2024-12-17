@@ -1,0 +1,90 @@
+{% extends "base/base.html.twig" %}
+
+{% block title %} Casu'Hall - Mes commandes effectuées {% endblock %}
+
+{% block body %}
+    <nav aria-label="breadcrumb" style="--bs-breadcrumb-divider: url(&#34;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8'%3E%3Cpath d='M2.5 0L1 1.5 3.5 4 1 6.5 2.5 8l4-4-4-4z' fill='currentColor'/%3E%3C/svg%3E&#34;);" class="mt-3 ms-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ path('home.index')}}" class="text-black">Accueil</a></li>
+            <li class="breadcrumb-item"><a href="{{  path('edition.compte', {'id': app.user.id}) }}" class="text-black"> Mon espace personnel </a></li>
+            <li class="breadcrumb-item active" aria-current="page"> Mes commandes effectuées </li>
+        </ol>
+    </nav>
+
+    {% set previousIdCommande = null %}
+    <div class="container">
+        {% set totalPriceCommande = 0 %}
+        {% set firstArticle = true %}
+        {% for item in panierDoneCommands %}
+            {% if previousIdCommande != item.idCommande %}
+                {% if previousIdCommande is not null %}
+                    <div class="d-flex justify-content-center align-items-center mb-2">
+                        <h6 class="text-uppercase fw-bold text-decoration-underline"> Prix total de la commande :</h6>
+                        <h6 class="fw-bold ms-2 text-danger">{{ totalPriceCommande | number_format(2, '.', ' ') }} €</h6>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+            {% set totalPriceCommande = 0 %}
+            {% set firstArticle = true %}
+
+            <div class="container border rounded mt-4 mb-4 shadow shadow-lg">
+                <div class="mt-2">
+                    <div class="d-flex align-items-center p-2 mt-3">
+                        <div class="d-flex col-md-6">
+                            <h5 class="text-uppercase"> Numéro de commande </h5>
+                            <h5 class="fw-bold ms-2">{{ item.idCommande }} </h5>
+                        </div>
+                        <div class="col-md-6 text-end">
+                            <h5 class="fw-bold"> {{ item.createdAt|date('d/m/Y') }}</h5>
+                        </div>
+                    </div>
+            {% endif %}
+
+            {% if not firstArticle %}
+                <hr class="my-3"> {# Séparateur entre les articles #}
+            {% endif %}
+            
+            <div class="row">
+                <div class="col-md-3 p-3">
+                    <img src="{{ asset('assets/uploads/articles/300x300-' ~ item.article.images[0].name) }}" alt="{{ item.article.nomArticle }}" class="img-fluid resize-image">
+                </div>
+
+                <div class="col-md-6 mt-3">
+                    <h5 class="text-uppercase mb-2"> {{ item.article.nomArticle }} </h5>
+                    <hr>
+                    <div class="align-items-center mb-2"> 
+                        <h6 class="fw-bold me-2 text-uppercase">Description</h6>
+                        <p class="text-justify">{{ item.article.description|length > 100 ? item.article.description|slice(0, 120) ~ '...' : item.article.description }}</p>
+                    </div>
+                    <hr>
+                    <div class="d-flex align-items-center mb-2"> 
+                        <h6 class="fw-bold me-2 text-uppercase"> Quantité </h6>
+                        <h6 class=""> {{ item.quantite }} </h6>
+                    </div>
+                    <hr>
+                    <div class="d-flex align-items-center mb-2">
+                        <h6 class="text-uppercase fw-bold"> Prix de l'article : </h6>
+                        <h6 class="ms-1 text-danger fw-bold"> {{ item.prix | number_format(2, '.', ' ') }} €</h6>
+                    </div>
+                </div>
+            </div>
+
+            {% set totalPriceCommande = totalPriceCommande + (item.prix * item.quantite) %}
+            {% set previousIdCommande = item.idCommande %}
+            {% set firstArticle = false %} {# Une fois le premier article traité, mettre à false #}
+        {% else %}
+            <p>Aucune commande passée chez nous pour le moment.</p>
+        {% endfor %}
+        
+        {% if previousIdCommande is not null %}
+            <div class="d-flex justify-content-center align-items-center mb-2">
+                <h6 class="text-uppercase fw-bold text-decoration-underline"> Prix total de la commande :</h6>
+                <h6 class="fw-bold ms-2 text-danger">{{ totalPriceCommande | number_format(2, '.', ' ') }} €</h6>
+            </div>
+        </div>
+    </div>
+{% endif %}
+
+{% endblock %}

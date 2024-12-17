@@ -1,4 +1,4 @@
-{% extends "base.html.twig" %}
+{% extends "base/base.html.twig" %}
 
 {% block title %} Casu'Hall - Ajouter une catégorie {% endblock %}
 
@@ -15,7 +15,7 @@
         {% endfor %}
     {% endfor %}
     
-    <h4 class = "p-2 mt-3 text-uppercase fw-bold text-center"> Ajouter une catégorie </h4>
+    <h4 class = "p-2 mt-4 text-uppercase fw-bold text-center"> Ajouter une catégorie </h4>
     <div class="container d-flex align-items-center mb-4 mt-5">
         <div class="p-4 border border-black bg-light rounded mx-auto mb-4 shadow shadow-lg">
             {{ form_start(form) }}

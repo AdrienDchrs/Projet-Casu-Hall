@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Service\CookieService;
 use App\Entity\{Article, Utilisateur};
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Routing\Annotation\Route;
@@ -19,15 +20,17 @@ class ArticleFavoriController extends AbstractController
 
     private array $marques; 
     private array $categories;
-    private array $articlesFavoris;
-    private array $panier;
+    private array $articlesFavoris = [];
+    private array $panier = [];
 
     private array $emptyUserFavoris = [];
     private array $emptyUserPanier = [];
 
     private EntityManagerInterface $manager;
 
-    public function __construct(MarqueRepository $repositoryMarque,CategorieRepository $repositoryCategorie, EntityManagerInterface $manager, ArticleFavoriRepository $repositoryArticleFavori, PanierRepository $repositoryPanier)
+    private CookieService $cookieService;
+
+    public function __construct(MarqueRepository $repositoryMarque,CategorieRepository $repositoryCategorie, EntityManagerInterface $manager, ArticleFavoriRepository $repositoryArticleFavori, PanierRepository $repositoryPanier, CookieService $cookieService)
     {
         $this->repositoryMarque = $repositoryMarque;
         $this->repositoryPanier = $repositoryPanier;
@@ -38,24 +41,24 @@ class ArticleFavoriController extends AbstractController
         $this->categories  = $this->repositoryCategorie->findAll();
 
         $this->manager = $manager;
+
+        $this->cookieService = $cookieService;
     }
 
     #[Route('/articlesFavoris', name:'articles-favoris', methods:['GET', 'POST'])]
     public function GetArticlesFavoris(Request $request): Response
     {
         $user = $this->getUser();
-        $this->articlesFavoris = [];
-        $this->panier = [];
 
         if($user)
         {
             $this->articlesFavoris = $this->repositoryArticleFavori->findBy(['utilisateur' => $user]);
-            $this->panier = $this->repositoryPanier->findBy(['utilisateur' => $user]);
+            $this->panier = $this->repositoryPanier->findBy(['utilisateur' => $this->getUser(), "isDone" => false]);
         }
         else 
         {
-            $this->emptyUserFavoris = $this->getCookieUserNotConnected($request,'favoris',$this->emptyUserFavoris);
-            $this->emptyUserPanier = $this->getCookieUserNotConnected($request,'panier',$this->emptyUserPanier); 
+            $this->emptyUserFavoris = $this->cookieService->getCookieUserNotConnected($request,'favoris',$this->emptyUserFavoris);
+            $this->emptyUserPanier = $this->cookieService->getCookieUserNotConnected($request,'panier',$this->emptyUserPanier); 
         }
 
         return $this->render('articles/articles-favoris.html.twig', ['marques' => $this->marques,'categories' => $this->categories,
@@ -113,19 +116,6 @@ class ArticleFavoriController extends AbstractController
             }
         }
         return $this->redirectToRoute('articles-favoris', ['id' => $article->getId()]);
-    }
-
-    private function getCookieUserNotConnected(Request $request, $cookieName, $array)
-    {
-
-        $cookie = json_decode($request->cookies->get($cookieName, '[]'), true);
-            
-        if(!empty($cookie))
-            $array = $this->manager->getRepository(Article::class)->findBy(['id' => $cookie]);
-        else 
-            $array = [];
-
-        return $array; 
     }
 }
 ?>

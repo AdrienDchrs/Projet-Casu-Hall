@@ -2,8 +2,9 @@
 
 namespace App\Controller;
 
+use App\Entity\Contact;
 use App\Form\ContactType;
-use App\Entity\{Article,Contact};
+use App\Service\CookieService;
 use Doctrine\ORM\EntityManagerInterface;
 use App\Repository\ArticleFavoriRepository;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
@@ -24,11 +25,14 @@ class ContactController extends AbstractController
 
     private array $marques; 
     private array $categories;
-    private array $articlesFavoris;
-    private array $panier;
+    private array $articlesFavoris = [];
+    private array $panier = [];
 
     private array $emptyUserFavoris = [];
     private array $emptyUserPanier = [];
+
+    private CookieService $cookieService;
+
     /**
      * Constructeur de la classe
      *
@@ -37,7 +41,7 @@ class ContactController extends AbstractController
      * @param RepositoryArticlesFavoris $repositoryArticlesFavoris
      * @param EntityManagerInterface $manager
      */
-    public function __construct(MarqueRepository $repositoryMarque,CategorieRepository $repositoryCategorie, EntityManagerInterface $manager, ArticleFavoriRepository $repositoryArticleFavori, PanierRepository $repositoryPanier)
+    public function __construct(MarqueRepository $repositoryMarque,CategorieRepository $repositoryCategorie, EntityManagerInterface $manager, ArticleFavoriRepository $repositoryArticleFavori, PanierRepository $repositoryPanier,CookieService $cookieService)
     {
         $this->repositoryMarque         = $repositoryMarque;
         $this->repositoryCategorie      = $repositoryCategorie;
@@ -48,6 +52,8 @@ class ContactController extends AbstractController
         
         $this->marques = $this->repositoryMarque->findBy([], ['nomMarque' => 'ASC']);
         $this->categories = $this->repositoryCategorie->findAll();
+
+        $this->cookieService = $cookieService;
     }
 
     /**
@@ -60,18 +66,16 @@ class ContactController extends AbstractController
     public function SupportContact(Request $request, MailerInterface $mailer): Response
     {
         $user = $this->getUser();
-        $this->articlesFavoris = [];
-        $this->panier = [];
 
         if($user)
         {
             $this->articlesFavoris = $this->repositoryArticleFavori->findBy(['utilisateur' => $this->getUser()]);
-            $this->panier = $this->repositoryPanier->findBy(['utilisateur' => $this->getUser()]);
+            $this->panier = $this->repositoryPanier->findBy(['utilisateur' => $this->getUser(), "isDone" => false]);
         }
         else 
         {
-            $this->emptyUserFavoris = $this->getCookieUserNotConnected($request,'favoris',$this->emptyUserFavoris);
-            $this->emptyUserPanier  = $this->getCookieUserNotConnected($request,'panier',$this->emptyUserPanier);
+            $this->emptyUserFavoris = $this->cookieService->getCookieUserNotConnected($request,'favoris',$this->emptyUserFavoris);
+            $this->emptyUserPanier  = $this->cookieService->getCookieUserNotConnected($request,'panier',$this->emptyUserPanier);
         }
 
         $contact = new Contact();
@@ -90,7 +94,7 @@ class ContactController extends AbstractController
             ->to('casuhall.contact@gmail.com')
             ->subject($contact->getObjet())
             ->htmlTemplate('emailContact/email.html.twig')
-               ->context(['contact' => $contact]);
+            ->context(['contact' => $contact]);
 
             $mailer->send($email);  
 
@@ -103,25 +107,9 @@ class ContactController extends AbstractController
             $this->addFlash('success', 'Une erreur est survenue lors de l\'envoi du mail !');
         }
 
-        return $this->render('emailContact/contact.html.twig', ['marques' => $this->marques, 'categories' => $this->categories, 
+        return $this->render('contacts/contact.html.twig', ['marques' => $this->marques, 'categories' => $this->categories, 
                                                                 'user' => $this->getUser(),   'form' => $form->createView(),
                                                                 'articlesFavoris' => $this->articlesFavoris, 'panier' => $this->panier, 
                                                                 'emptyUserFavoris' => $this->emptyUserFavoris, 'emptyUserPanier' => $this->emptyUserPanier]);
-    }
-
-    /** 
-     * Fonction privée qui permet de récupérer les favoris d'un utilisateur non connecté
-     * @param Request $request sert à établir une requête HTTP pour récupérer les cookies de la session.
-     */
-    private function getCookieUserNotConnected(Request $request, $cookieName, $array)
-    {
-        $cookie = json_decode($request->cookies->get($cookieName, '[]'), true);
-            
-        if(!empty($cookie))
-            $array = $this->manager->getRepository(Article::class)->findBy(['id' => $cookie]);
-        else 
-            $array = [];
-
-        return $array; 
     }
 }

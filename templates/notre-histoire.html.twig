@@ -1,58 +1,78 @@
-{% extends "base.html.twig" %}
+{% extends "base/base.html.twig" %}
 
 {% block title %} Casu'Hall - Notre histoire {% endblock %}
 
 {% block body %}
-    <div class="container-fluid mt-2">
-        <div class="row">
-            <div class="col-md-7">
-                <h4 class="text-center mt-4 mb-5"><i>« Chez Casu’Hall, nous nous inspirons du mouvement Casual, né à la fin des années 70 au Royaume Uni. »</i></h4> 
-
-                <h6 class="text-left mt-4 fw-bold">Qu'est-ce qu'est le mouvement Casual ?</h6>
-
-                <p class="mt-3"> &nbsp;&nbsp;&nbsp;&nbsp; Le mouvement casual est un <b> phénomène culturel et vestimentaire </b>, principalement au sein des supporters de football. Contrairement aux hooligans 
-                    plus traditionnels, qui se distinguaient par un style vestimentaire facilement reconnaissable, les casuals optaient pour un look plus <b> subtil </b> et <b> sophistiqué</b>, souvent pour éviter 
-                    d’attirer l’attention des autorités et des rivaux. <b> Les casuals se distinguent par leur goût pour les vêtements de marques haut de gamme et de sport, souvent associées à un certain 
-                    prestige et à une qualité supérieure. </b> </p> 
-
-                <p class="mt-3"> &nbsp;&nbsp;&nbsp;&nbsp; Parmi les marques les plus prisées figurent <b> Stone Island</b>, <b> CP Company</b>, <b> Fred Perry</b>, <b> Lyle and Scott</b>, <b> Adidas</b>, <b>Sergio Tacchini</b>,<b> Fila </b>, 
-                    et elles sont souvent intégrées dans des tenues soigneusement choisies. Les pièces clés incluent des vestes techniques, des polos, des survêtements, des jeans et des chaussures 
-                    de sport, le tout porté avec une attention particulière aux détails et à la coordination des couleurs. </p>
-                    
-                <p class="mt-3"> &nbsp;&nbsp;&nbsp;&nbsp; Le mouvement casual ne se résume pas seulement à la mode. Il est aussi marqué par <b> une culture de loyauté intense envers son club 
-                    de football </b>, une attitude rebelle et une certaine exclusivité, où le savoir-faire en matière de style sert de marqueur social   
-                    au sein des tribunes. Les casuals adoptent un mode de vie qui mêle passion pour le football, souci du détail vestimentaire et esprit de groupe.
-                </p>
+    <div class="container-fluid mt-1">
+        <div class="row align-items-center">
+            <div class="col-md-5 mt-2">
+                <img src="/assets/images/image_casuhall.jpg" class="img-fluid rounded shadow-lg mx-auto d-block" alt="Casuals" height="582px" width="700px">
+                <div class="d-flex justify-content-center">
+                    <p class="small fst-italic m-0 text-center"> 
+                        Image tirée du film Hooligans (Green Street) réalisé par Lexi Alexander en 2005 
+                    </p>
+                </div>
             </div>
-
-            <div class="col-md-5">
-                <img src="/assets/images/image_casuhall.jpg" class="img-fluid" alt="Casuals">
+            <div class="col-md-7">
+                <h4 class="text-center text-muted mb-1">
+                    <i>« Chez Casu’Hall, nous nous inspirons du mouvement Casual, né à la fin des années 70 au Royaume Uni. »</i>
+                </h4>
+                <hr class="w-25 mx-auto mt-5 mb-5">
+                <h6 class="text-left mt-2 fw-bold">Qu'est-ce qu'est le mouvement Casual ?</h6>                                
+                <p id="history-indent" class="mt-3 text-justify">
+                    Le mouvement casual est un <b>phénomène culturel et vestimentaire</b>, principalement au sein des supporters de football. Contrairement aux hooligans 
+                    plus traditionnels, qui se distinguaient par un style vestimentaire facilement reconnaissable, les casuals optaient pour un look plus 
+                    <b>subtil</b> et <b>sophistiqué</b>, souvent pour éviter d’attirer l’attention des autorités et des rivaux. 
+                    <b>Les casuals se distinguent par leur goût pour les vêtements de marques haut de gamme et de sport, souvent associées à un certain 
+                    prestige et à une qualité supérieure.</b>
+                </p>
+                <p id="history-indent" class="mt-3 text-justify">
+                    Parmi les marques les plus prisées figurent <b>Stone Island</b>, <b>CP Company</b>, <b>Fred Perry</b>, <b>Lyle and Scott</b>, <b>Adidas</b>, 
+                    <b>Sergio Tacchini</b>, <b>Fila</b>, et elles sont souvent intégrées dans des tenues soigneusement choisies. Les pièces clés incluent des vestes techniques, 
+                    des polos, des survêtements, des jeans et des chaussures de sport, le tout porté avec une attention particulière aux détails et à la coordination des couleurs.
+                </p>
+                <p id="history-indent" class="mt-3 text-justify">
+                    Le mouvement casual ne se résume pas seulement à la mode. Il est aussi marqué par 
+                    <b>une culture de loyauté intense envers son club de football</b>, une attitude rebelle et une certaine exclusivité, où le savoir-faire 
+                    en matière de style sert de marqueur social au sein des tribunes. Les casuals adoptent un mode de vie qui mêle passion pour le football, 
+                    souci du détail vestimentaire et esprit de groupe.
+                </p>
             </div>
         </div>
     </div>
-    <div class="container-fluid mb-2">
-        <div class="row">
+
+    <div class="container-fluid mt-5 mb-4">
+        <div class="row align-items-center">
             <div class="col-md-5">
-                <img src="/assets/images/image_casuhall_2.jpg" class="img-fluid" alt="Casuals">
+                <img src="/assets/images/image_casuhall_2.jpg" class="img-fluid rounded shadow-lg mx-auto d-block" alt="Casuals" height="582px" width="700px">
+                <p class="small fst-italic m-0 text-center"> 
+                    Image tirée du film Hooligans (Green Street) réalisé par Lexi Alexander en 2005 
+                </p>
             </div>
-            <div class="col-md-7 text-left">
-                <h6 class="text-left mt-4 fw-bold">Pourquoi avons-nous tenu à créer ce site ?</h6>
-
-                <p class="text-justify mt-3"> &nbsp;&nbsp;&nbsp;&nbsp; Nous avons créé ce site pour répondre à un besoin croissant de la communauté des adeptes du style casual. En tant que passionnés nous-mêmes, 
-                    nous avons constaté qu'il manquait une plateforme dédiée où l'on peut trouver facilement des vêtements et des accessoires qui incarnent pleinement l'esprit du mouvement casual. 
-                    Notre objectif est de fournir une sélection de produits qui répondent aux standards de qualité et de style que recherchent les casuals, tout en offrant une expérience d'achat pratique et agréable. </p>
-
-                <p class="text-justify mt-3"> &nbsp;&nbsp;&nbsp;&nbsp; En créant ce site, nous souhaitons également promouvoir une culture de la mode qui valorise l'authenticité et l'individualité. Nous croyons fermement que 
+            <div class="col-md-7">
+                <h6 class="text-left fw-bold">Pourquoi avons-nous tenu à créer ce site ?</h6>
+                <p id="history-indent" class="mt-3 text-justify">
+                    Nous avons créé ce site pour répondre à un besoin croissant de la communauté des adeptes du style casual. En tant que passionnés nous-mêmes, 
+                    nous avons constaté qu'il manquait une plateforme dédiée où l'on peut trouver facilement des vêtements et des accessoires qui incarnent pleinement 
+                    l'esprit du mouvement casual. Notre objectif est de fournir une sélection de produits qui répondent aux standards de qualité et de style que recherchent 
+                    les casuals, tout en offrant une expérience d'achat pratique et agréable.
+                </p>
+                <p id="history-indent" class="mt-3 text-justify">
+                    En créant ce site, nous souhaitons également promouvoir une culture de la mode qui valorise l'authenticité et l'individualité. Nous croyons fermement que 
                     le style casual représente plus qu'un simple choix vestimentaire; c'est une déclaration de personnalité et une forme d'expression culturelle. Nous voulons offrir à nos clients 
-                    une plateforme où ils peuvent non seulement acheter des vêtements, mais aussi se connecter avec une communauté partageant les mêmes valeurs et la même passion. </p>
-
-                <p class="text-justify mt-3"> &nbsp;&nbsp;&nbsp;&nbsp; De plus, nous nous engageons à proposer des articles exclusifs et des collaborations uniques qui ne se trouvent nulle part ailleurs. En travaillant directement 
-                    avec des marques renommées et des designers innovants, nous assurons à nos clients l'accès à des pièces de qualité supérieure et à des collections spéciales qui reflètent les dernières tendances du style casual. </p>
-
-                <p class="text-justify mt-3"> &nbsp;&nbsp;&nbsp;&nbsp; Enfin, notre site est conçu pour être une source d'inspiration et d'information. En plus de notre boutique en ligne, nous proposons des articles, des guides de style, 
-                    et des interviews avec des figures emblématiques du mouvement casual. Nous voulons être plus qu'un simple magasin; nous aspirons à devenir un hub pour tout ce qui concerne le style casual, 
-                    en offrant à notre communauté les outils et les ressources pour affirmer leur look et leur identité. </p>
-            </div>  
+                    une plateforme où ils peuvent non seulement acheter des vêtements, mais aussi se connecter avec une communauté partageant les mêmes valeurs et la même passion.
+                </p>
+                <p id="history-indent" class="mt-3 text-justify">
+                    De plus, nous nous engageons à proposer des articles exclusifs et des collaborations uniques qui ne se trouvent nulle part ailleurs. En travaillant directement 
+                    avec des marques renommées et des designers innovants, nous assurons à nos clients l'accès à des pièces de qualité supérieure et à des collections spéciales 
+                    qui reflètent les dernières tendances du style casual.
+                </p>
+                <p id="history-indent" class="mt-3 text-justify">
+                    Enfin, notre site est conçu pour être une source d'inspiration et d'information. En plus de notre boutique en ligne, nous proposons des articles, des guides de style, 
+                    et des interviews avec des figures emblématiques du mouvement casual. Nous voulons être plus qu'un simple magasin; nous aspirons à devenir un hub pour tout ce qui concerne 
+                    le style casual, en offrant à notre communauté les outils et les ressources pour affirmer leur look et leur identité.
+                </p>
+            </div>
         </div>
     </div>
 {% endblock %}

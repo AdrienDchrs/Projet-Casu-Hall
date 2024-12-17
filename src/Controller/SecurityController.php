@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Form\InscriptionType;
+use App\Service\CookieService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Security\Core\Security;
 use Symfony\Component\Routing\Annotation\Route;
@@ -26,13 +27,15 @@ class SecurityController extends AbstractController
 
     private EntityManagerInterface $manager;
 
+    private CookieService $cookieService;
+
     /**
      * Constructeur de la classe
      * @param MarqueRepository $repositoryMarque
      * @param CategorieRepository $repositoryCategorie
      * @param UtilisateurRepository $repositoryUtilisaeur
      */
-    public function __construct(MarqueRepository $repositoryMarque,CategorieRepository $repositoryCategorie,UtilisateurRepository $repositoryUtilisateur, EntityManagerInterface $manager)
+    public function __construct(MarqueRepository $repositoryMarque,CategorieRepository $repositoryCategorie,UtilisateurRepository $repositoryUtilisateur, EntityManagerInterface $manager, CookieService $cookieService)
     {
         $this->repositoryMarque         = $repositoryMarque;
         $this->repositoryCategorie      = $repositoryCategorie;
@@ -42,6 +45,8 @@ class SecurityController extends AbstractController
         $this->categories = $this->repositoryCategorie->findAll();
 
         $this->manager = $manager;
+
+        $this->cookieService = $cookieService;
     }
 
     /**
@@ -52,8 +57,8 @@ class SecurityController extends AbstractController
     #[Route('/connexion', 'security.connexion', methods:['GET', 'POST'])]
     public function connexion(Request $request, AuthenticationUtils $authenticationUtils): Response
     {
-        $this->emptyUserFavoris = $this->getCookieUserNotConnected($request,'favoris',$this->emptyUserFavoris);
-        $this->emptyUserPanier  = $this->getCookieUserNotConnected($request,'panier',$this->emptyUserPanier);
+        $this->emptyUserFavoris = $this->cookieService->getCookieUserNotConnected($request,'favoris',$this->emptyUserFavoris);
+        $this->emptyUserPanier  = $this->cookieService->getCookieUserNotConnected($request,'panier',$this->emptyUserPanier);
 
         if ($this->getUser()) 
             return $this->redirectToRoute('post_connexion');
@@ -104,21 +109,24 @@ class SecurityController extends AbstractController
             {
                 $this->emptyUserPanier = $this->manager->getRepository(Article::class)->findBy(['id' => $cookie]);
 
-                $arrayExist = $this->manager->getRepository(Panier::class)->findBy(['article' => $cookie, 'utilisateur' => $user]);
+                $arrayExist = $this->manager->getRepository(Panier::class)->findBy(['article' => $cookie, 'utilisateur' => $user, 'isDone' => false]);
 
                 if(empty($arrayExist))
                 {
+
                     foreach ($this->emptyUserPanier as $article) 
                     {
-                        $object = new Panier();
-                        $object->setPrix($article->getPrix());
-                        $object->setQuantite(1);
-                        $object->setIsDone(0);
-                        $object->setUtilisateur($user);
-                        $object->setArticle($article);
+                        $panier = new Panier();
+                        $panier->setPrix($article->getPrix());
+                        $panier->setQuantite(1);
+                        $panier->setIsDone(0);
+                        $panier->setUtilisateur($user);
+                        $panier->setArticle($article);
 
-                
-                        $this->manager->persist($object);
+                        $randomIdCommande = $this->generateIdentifier(10);
+                        $panier->setIdCommande($randomIdCommande);
+
+                        $this->manager->persist($panier);
                     }
                     $this->manager->flush(); 
                 }
@@ -130,7 +138,6 @@ class SecurityController extends AbstractController
         }          
         return $this->redirectToRoute('home.index');
     }
-
 
     /**
      * Contrôleur permettant de gérer la déconnexion
@@ -148,31 +155,33 @@ class SecurityController extends AbstractController
      * On affecte directement le role d'utilisateur
      * Il y a une gestion de mot de passe renforcée, grâce à un validator. 
      * @param Request $request
-     * @param EntityManagerInterface $manager
      * @return Response
      */
-    #[Route('/inscription', 'security.inscription', methods:['GET', 'POST'])]
-    public function Inscription(Request $request, EntityManagerInterface $manager): Response
+    #[Route('/inscription', 'security.inscription', methods:['GET','POST'])]
+    public function Inscription(Request $request): Response
     {
-        $this->emptyUserFavoris = $this->getCookieUserNotConnected($request,'favoris',$this->emptyUserFavoris);
-        $this->emptyUserPanier  = $this->getCookieUserNotConnected($request,'panier',$this->emptyUserPanier);
+        $this->emptyUserFavoris = $this->cookieService->getCookieUserNotConnected($request,'favoris',$this->emptyUserFavoris);
+        $this->emptyUserPanier  = $this->cookieService->getCookieUserNotConnected($request,'panier',$this->emptyUserPanier);
 
         $user = new Utilisateur(); 
         $form = $this->createForm(InscriptionType::class, $user);
         $form->handleRequest($request);
-        
+
+        $user->setRoles(['ROLE_USER']);
+    
         if($form->isSubmitted() && $form->isValid())
         {
             $user = $form->getData();
             
             $telephoneFormat = $user->getTelephone();
-            $telephoneFormat = preg_replace('/[^0-9]/', '', $telephoneFormat);
+            if($telephoneFormat != null)
+            {
+                $telephoneFormat = preg_replace('/[^0-9]/', '', $telephoneFormat);
+                $user->setTelephone('+' . substr($telephoneFormat, 0, 2) . ' ' . substr($telephoneFormat, 2, 1) . ' ' . substr($telephoneFormat, 3, 2) . ' ' . substr($telephoneFormat, 5, 2) . ' ' . substr($telephoneFormat, 7, 2) . ' ' . substr($telephoneFormat, 9, 2));            
+            }
 
-            $user->setTelephone('+' . substr($telephoneFormat, 0, 2) . ' ' . substr($telephoneFormat, 2, 1) . ' ' . substr($telephoneFormat, 3, 2) . ' ' . substr($telephoneFormat, 5, 2) . ' ' . substr($telephoneFormat, 7, 2) . ' ' . substr($telephoneFormat, 9, 2));            
-            $user->setRoles(['ROLE_USER']);
-
-            $manager->persist($user);
-            $manager->flush();
+            $this->manager->persist($user);
+            $this->manager->flush();
 
             $this->addFlash('success', 'Inscription avec succès !');
 
@@ -181,14 +190,23 @@ class SecurityController extends AbstractController
         }
         else if($form->isSubmitted() && !$form->isValid()) 
         {
+            // $errors = $form->getErrors(true, false);
+            // foreach ($errors as $error) {
+            //     dump(
+            //         'Champ : ' . $error->getOrigin()->getName(),
+            //         'Erreur : ' . $error->getMessage()
+            //     );
+            // }
+            // dd($form->getData());
+
             $mail = $form->getData()->getEmail();
             
             $adresseExistante = $this->repositoryUtilisateur->findBy(['email' => $mail]);
 
             if($adresseExistante)
-                $this->addFlash('erreur', 'Vous avez déjà un compte !');
+                $this->addFlash('error', 'Vous avez déjà un compte !');
             else
-                $this->addFlash('erreur', 'Erreur lors de l\'inscription ! Veuillez réessayer.');
+                $this->addFlash('error', 'Erreur lors de l\'inscription ! Veuillez réessayer.');
         }
 
         return $this->render('security/inscription.html.twig', ['marques' =>  $this->marques, 'categories' =>  $this->categories, 'form' => $form->createView(), 
@@ -196,20 +214,19 @@ class SecurityController extends AbstractController
     }
 
     /** 
-     * Fonction privée qui permet de récupérer les favoris d'un utilisateur non connecté
-     * @param Request $request sert à établir une requête HTTP pour récupérer les cookies de la session.
+     * Fonction privée qui permet de générer un identifiant de commande de façon aléatoire
+     * @param $length déterminant la taille de l'identifiant
      */
-    private function getCookieUserNotConnected(Request $request, $cookieName, $array)
+    private function generateIdentifier($length = 10)
     {
+        $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        $charactersLength = strlen($characters);
+        $randomString = '';
 
-        $cookie = json_decode($request->cookies->get($cookieName, '[]'), true);
-            
-        if(!empty($cookie))
-            $array = $this->manager->getRepository(Article::class)->findBy(['id' => $cookie]);
-        else 
-            $array = [];
+        for($i = 0; $i < $length; $i++)
+            $randomString .= $characters[random_int(0,$charactersLength - 1)];
 
-        return $array; 
+        return $randomString;
     }
 }
 

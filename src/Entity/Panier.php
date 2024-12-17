@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use DateTimeImmutable;
 use Doctrine\ORM\Mapping as ORM; 
 use App\Repository\PanierRepository;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -13,6 +14,11 @@ class Panier
     #[ORM\Column]
     #[ORM\GeneratedValue]
     private ?int $id = null;
+
+    #[ORM\Column]
+    #[Assert\NotNull()]
+    #[Assert\NotBlank()]
+    private ?string $idCommande = null;
 
     #[ORM\Column]
     #[Assert\NotNull()]
@@ -29,6 +35,9 @@ class Panier
     #[ORM\Column]
     private ?bool $isDone = null;
 
+    #[Assert\NotNull()]
+    #[ORM\Column(type: 'datetime_immutable')]
+    private ?DateTimeImmutable $createdAt;
 
     #[ORM\ManyToOne(targetEntity: Utilisateur::class)]
     #[ORM\JoinColumn(name: 'id_utilisateur', referencedColumnName: 'id', nullable: false)]
@@ -38,14 +47,28 @@ class Panier
     #[ORM\JoinColumn(name: 'id_article', referencedColumnName: 'id', nullable: false)]
     private ?Article $article = null;
 
-    public function getId(): ?int                   {   return $this->id;           }
-    public function getPrix(): ?float               {   return $this->prix;         }
-    public function getQuantite(): ?int             {   return $this->quantite;     }
-    public function getIsDone(): ?bool              {   return $this->isDone;       }
-    public function getUtilisateur(): ?Utilisateur  {   return $this->utilisateur;  }
-    public function getArticle(): ?Article          {   return $this->article;      }
+    public function __construct()
+    {
+        $this->createdAt = new \DateTimeImmutable();
+    }
+
+    public function getId(): ?int                       {   return $this->id;           }
+    public function getIdCommande(): ?string            {   return $this->idCommande;   }
+    public function getPrix(): ?float                   {   return $this->prix;         }
+    public function getQuantite(): ?int                 {   return $this->quantite;     }
+    public function getIsDone(): ?bool                  {   return $this->isDone;       }
+    public function getUtilisateur(): ?Utilisateur      {   return $this->utilisateur;  }
+    public function getArticle(): ?Article              {   return $this->article;      }
+    public function getCreatedAt(): ?DateTimeImmutable  {   return $this->createdAt;    }
 
     
+    public function setIdCommande($idCommande): static 
+    {
+        $this->idCommande = $idCommande;
+        
+        return $this;
+    }
+
     public function setPrix($prix): static 
     {
         $this->prix = $prix;
@@ -60,9 +83,11 @@ class Panier
         return $this;
     }
 
-    public function setIsDone()
+    public function setIsDone(bool $isDone): static
     {
-        return $this->isDone = !$this->isDone;
+        $this->isDone = $isDone; 
+
+        return $this;
     }
 
     public function setUtilisateur(?Utilisateur $utilisateur): self
@@ -75,6 +100,13 @@ class Panier
     public function setArticle(?Article $article): self
     {
         $this->article = $article;
+
+        return $this;
+    }
+
+    public function setCreatedAt(\DateTimeImmutable $createdAt): self
+    {
+        $this->createdAt = $createdAt;
 
         return $this;
     }

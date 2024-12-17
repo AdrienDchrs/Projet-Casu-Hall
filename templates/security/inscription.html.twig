@@ -1,4 +1,4 @@
-{% extends "base.html.twig" %}
+{% extends "base/base.html.twig" %}
 
 {% block title %} Casu'Hall - Inscription {% endblock %}
 
@@ -15,97 +15,100 @@
         {% endfor %}
     {% endfor %}
 
-    <div class = "text-center"> 
-        <h4 class = "p-2 mt-3 text-uppercase fw-bold"> Inscription </h4>
+    <div class="text-center"> 
+        <h4 class="p-2 mt-3 text-uppercase fw-bold"> Inscription </h4>
     </div>
     <div class="container d-flex align-items-center mb-4 mt-3">
         <div class="p-4 border border-black bg-light rounded mx-auto shadow shadow-lg">
             {{ form_start(form) }}
                 <div class="row mb-2">
-                    <div class="mb-3 col-md-6">
-                        {{ form_label(form.civilite) }}
-                        {% for child in form.civilite %}
-                            <div class="form-check me-3 mt-2">
-                                {{ form_widget(child, {attr: {class: 'form-check-input'}}) }}
-                                {{ form_label(child, null, {attr: {class: 'form-check-label'}}) }}
-                            </div>
-                        {% endfor %}
-                    </div>
-                    <div class="col-md-6">
-                        <div class="row">
-                            <div class="col-12">
-                                {{ form_label(form.dateNaissance) }}
-                            </div>
+                    <div class="mb-2 col-md-6 d-flex align-items-center">
+                        <div class="me-3">
+                            {{ form_label(form.civilite) }}
                         </div>
-                        <div class="row">
-                            <div class="col-auto mt-3 custom-space">
-                                {{ form_widget(form.dateNaissance.day,{attr: {class: 'form-control'}}) }}
-                            </div>
-                            <div class="col-auto mt-3 custom-space">
-                                {{ form_widget(form.dateNaissance.month,{attr: {class: 'form-control'}}) }}
-                            </div>
-                            <div class="col-auto mt-3 custom-space">
-                                {{ form_widget(form.dateNaissance.year, {attr: {class: 'form-control'}}) }}
+                        <div class="d-flex">
+                            {% for child in form.civilite %}
+                                <div class="form-check me-3">
+                                    {{ form_widget(child, {attr: {class: 'form-check-input'}}) }}
+                                    {{ form_label(child, null, {attr: {class: 'form-check-label'}}) }}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="mb-2 col-md-6 d-flex align-items-center">
+                        <div class="me-3">
+                            {{ form_label(form.dateNaissance) }}
+                        </div>
+                        <div>
+                            <div class="d-flex">
+                                {{ form_widget(form.dateNaissance.day, {attr: {class: 'p-2 border rounded me-1'}}) }}
+                                {{ form_widget(form.dateNaissance.month, {attr: {class: 'p-2 border rounded me-1'}}) }}
+                                {{ form_widget(form.dateNaissance.year, {attr: {class: 'p-2 border rounded'}}) }}
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <div class="row mb-2">
-                    <div class="col-md-6">
+                    <div class="col-md-2 mt-2">
                         {{ form_label(form.prenomUtilisateur) }}
+                    </div>
+                    <div class="col-md-4"> 
                         {{ form_widget(form.prenomUtilisateur) }}
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-md-2 mt-2">
                         {{ form_label(form.nomUtilisateur) }}
+                    </div>
+                    <div class="col-md-4"> 
                         {{ form_widget(form.nomUtilisateur) }}
                     </div>
                 </div>
 
                 <div class="row mb-2">
-                    <div class="col-12">
+                    <div class="col-md-2">
                         {{ form_label(form.email) }}
+                    </div>
+                    <div class="col-md-4"> 
                         {{ form_widget(form.email) }}
                     </div>
                 </div>
-
+                <hr>
                 <div class="row mb-2">
-                    <div class="col-12">
-                        {{ form_label(form.telephone) }}
-                        {{ form_widget(form.telephone) }}
-                        {{ form_errors(form.telephone) }}
-                    </div>
-                </div>
-
-                <div class="row mb-2">
-                    <div class="col-12">
+                    <div class="col-md-4">
                         {{ form_label(form.plainPassword.first) }}
+                    </div>
+                    <div class="col-md-8">
                         {{ form_widget(form.plainPassword.first) }}
                     </div>
                 </div>
 
                 <div class="row mb-2">
-                    <div class="col-12">
+                    <div class="col-md-4">
                         {{ form_label(form.plainPassword.second) }}
+                    </div>
+                    <div class="col-md-8">
                         {{ form_widget(form.plainPassword.second) }}
                     </div>
                 </div>
 
-                <small class="mb-3 fst-italic d-block">
-                    Pour rappel, votre mot de passe doit contenir au moins <b>8 caractères, une majuscule, une minuscule, un chiffre et un caractère spécial</b>.
-                </small>
-
                 <div class="form-check mb-4">
-                    <input class="form-check-input" type="checkbox" value="" id="flexCheckDefault" onClick="afficherMotDePasse('inscription_plainPassword_first','inscription_plainPassword_second')">
+                    <input class="form-check-input" type="checkbox" onClick="afficherMotDePasse('inscription_plainPassword_first','inscription_plainPassword_second')">
                     <label class="form-check-label" for="flexCheckDefault"> Visualiser les mots de passe </label>
                 </div>
 
-                <div class="d-flex justify-content-between">
-                    <p>Déjà un compte ? <a href="{{ path('security.connexion') }}" class="text-black"><b>Connectez-vous ici.</b></a></p>
+                <div class="alert alert-warning d-flex align-items-center p-2 mt-2">
+                    <div class="fst-italic small d-flex">
+                        <p class="mb-0">Pour rappel, votre mot de passe doit contenir au moins</p>
+                        <p class="fw-bold mb-0 ms-1">8 caractères, une majuscule, une minuscule, un chiffre et un caractère spécial.</p>
+                    </div>
                 </div>
 
-                <div class="row">
-                    {{ form_widget(form.submit) }}
+                <div class="row mt-4">
+                    <div class="btn-group w-75 d-flex mx-auto" role="group">
+                        {{ form_widget(form.submit) }}
+                        <a href="{{ path('security.connexion') }}" class="btn btn-outline-dark"> Déjà un compte ? Connectez-vous ici. </a>
+                    </div>
                 </div>  
         </div>
     </div>

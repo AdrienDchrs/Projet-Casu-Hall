@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" version="1.2">
+  <file source-language="en" target-language="fr" datatype="plaintext" original="file.ext">
+    <header>
+      <tool tool-id="symfony" tool-name="Symfony"/>
+    </header>
+    <body>
+        <trans-unit id="form.nom_marque.label" resname="form.nom_marque.label">
+        <source>Name *:</source>
+        <target>Nom *:</target>
+      </trans-unit>
+      <trans-unit id="form.logo_marque.label" resname="form.logo_marque.label">
+        <source>Logo *:</source>
+        <target>Logo *:</target>
+      </trans-unit>
+      <trans-unit id="form.ajouter_marque.bouton" resname="form.ajouter_marque.bouton">
+        <source>Add the brand</source>
+        <target>Ajouter la marque</target>
+      </trans-unit>
+      <trans-unit id="form.supprimer_marque.bouton" resname="form.supprimer_marque.bouton">
+        <source>Delete the brand</source>
+        <target>Supprimer la marque</target>
+      </trans-unit>
+    </body>
+   </file>
+</xliff>

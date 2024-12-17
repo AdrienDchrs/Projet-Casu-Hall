@@ -9,6 +9,7 @@ use Symfony\Component\HttpFoundation\{Cookie,Request,Response};
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
 use App\Repository\{MarqueRepository,PanierRepository,CategorieRepository,ArticleFavoriRepository};
+use App\Service\CookieService;
 
 class PanierController extends AbstractController
 {
@@ -27,6 +28,8 @@ class PanierController extends AbstractController
     private array $emptyUserFavoris = [];
     private array $emptyUserPanier = [];
 
+    private CookieService $cookieService;
+
     /**
      * Constructeur de la classe
      * @param MarqueRepository $repositoryMarque
@@ -35,7 +38,7 @@ class PanierController extends AbstractController
      * @param ArticleFavoriRepository $repositoryArticleFavori
      * @param PanierRepository $repositoryPanier
      */
-    public function __construct(MarqueRepository $repositoryMarque,CategorieRepository $repositoryCategorie, EntityManagerInterface $manager, ArticleFavoriRepository $repositoryArticleFavori, PanierRepository $repositoryPanier)
+    public function __construct(MarqueRepository $repositoryMarque,CategorieRepository $repositoryCategorie, EntityManagerInterface $manager, ArticleFavoriRepository $repositoryArticleFavori, PanierRepository $repositoryPanier, CookieService $cookieService)
     {
         $this->repositoryMarque = $repositoryMarque;
         $this->repositoryCategorie = $repositoryCategorie;
@@ -46,6 +49,9 @@ class PanierController extends AbstractController
 
         $this->marques = $this->repositoryMarque->findBy([], ['nomMarque' => 'ASC']);
         $this->categories = $this->repositoryCategorie->findAll();
+
+        $this->cookieService = $cookieService;
+
     }
 
 
@@ -64,17 +70,15 @@ class PanierController extends AbstractController
         if($user)
         {    
             $this->articlesFavoris = $this->repositoryArticleFavori->findBy(['utilisateur' => $this->getUser()]);
-            $this->panier = $this->repositoryPanier->findBy(['utilisateur' => $this->getUser()]);
+            $this->panier = $this->repositoryPanier->findBy(['utilisateur' => $this->getUser(), "isDone" => false]);
 
             foreach($this->panier as $panier)
-            {
                 $quantityArt += $panier->getQuantite();
-            }
         }
         else 
         {
-            $this->emptyUserFavoris = $this->getCookieUserNotConnected($request,'favoris',$this->emptyUserFavoris);
-            $this->emptyUserPanier = $this->getCookieUserNotConnected($request,'panier',$this->emptyUserPanier);
+            $this->emptyUserFavoris = $this->cookieService->getCookieUserNotConnected($request,'favoris',$this->emptyUserFavoris);
+            $this->emptyUserPanier = $this->cookieService->getCookieUserNotConnected($request,'panier',$this->emptyUserPanier);
         } 
 
         
@@ -96,7 +100,7 @@ class PanierController extends AbstractController
 
         if($user)
         {
-            $isAdd = $this->repositoryPanier->findBy(['article' => $article->getId(), 'utilisateur' => $user]);
+            $isAdd = $this->repositoryPanier->findBy(['article' => $article->getId(), 'utilisateur' => $user, 'isDone' => false]);
             if($isAdd)
             {
                 $this->addFlash('warning', 'L\'article est déjà dans votre panier !');
@@ -108,13 +112,25 @@ class PanierController extends AbstractController
             }
             else
             {
+                $panierNotEmpty = $this->repositoryPanier->findOneBy(['utilisateur' => $user, "isDone" => false]);
+
                 $panier = new Panier();
                 $panier->setPrix($article->getPrix());
                 $panier->setQuantite(1);
-                $panier->setIsDone(0);
+                $panier->setIsDone(false);
                 $panier->setUtilisateur($user);
                 $panier->setArticle($article);
-        
+
+                if($panierNotEmpty)
+                {
+                    $panier->setIdCommande($panierNotEmpty->getIdCommande());
+                }
+                else
+                {
+                    $randomIdCommande = $this->generateIdentifier(10);
+                    $panier->setIdCommande($randomIdCommande);
+                }
+
                 $this->manager->persist($panier);
                 $this->manager->flush();
         
@@ -161,7 +177,7 @@ class PanierController extends AbstractController
         $user = $this->getUser();
         if($user)
         {
-            $existPanier = $this->repositoryPanier->findOneBy(['utilisateur' => $user,'article' => $article]);
+            $existPanier = $this->repositoryPanier->findOneBy(['utilisateur' => $user,'article' => $article, "isDone" => false]);
             if($existPanier)
             {
                 if($existPanier->getQuantite() > 1)
@@ -192,7 +208,7 @@ class PanierController extends AbstractController
 
         if($user)
         {
-            $existPanier = $this->repositoryPanier->findOneBy(['utilisateur' => $user, 'article' => $article]);
+            $existPanier = $this->repositoryPanier->findOneBy(['utilisateur' => $user, 'article' => $article, "isDone" => false]);
             if($existPanier)
             { 
                 if($existPanier->getQuantite() < $existPanier->getArticle()->getQuantiteStock())
@@ -222,7 +238,7 @@ class PanierController extends AbstractController
 
         if($user)
         {
-            $this->panier = $this->repositoryPanier->findBy(['article' => $article->getId(), 'utilisateur' => $user]);
+            $this->panier = $this->repositoryPanier->findBy(['article' => $article->getId(), 'utilisateur' => $user, "isDone" => false]);
             
             if(!$this->panier)
             {
@@ -262,20 +278,19 @@ class PanierController extends AbstractController
     }
 
     /** 
-     * Fonction privée qui permet de récupérer les favoris d'un utilisateur non connecté
-     * @param Request $request sert à établir une requête HTTP pour récupérer les cookies de la session.
+     * Fonction privée qui permet de générer un identifiant de commande de façon aléatoire
+     * @param $length déterminant la taille de l'identifiant
      */
-    private function getCookieUserNotConnected(Request $request, $cookieName, $array)
+    private function generateIdentifier($length = 10)
     {
+        $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        $charactersLength = strlen($characters);
+        $randomString = '';
 
-        $cookie = json_decode($request->cookies->get($cookieName, '[]'), true);
-            
-        if(!empty($cookie))
-            $array = $this->manager->getRepository(Article::class)->findBy(['id' => $cookie]);
-        else 
-            $array = [];
+        for($i = 0; $i < $length; $i++)
+            $randomString .= $characters[random_int(0,$charactersLength - 1)];
 
-        return $array; 
+        return $randomString;
     }
 }
 

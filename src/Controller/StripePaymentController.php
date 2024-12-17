@@ -11,7 +11,7 @@ use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\{RedirectResponse, Response};
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use App\Repository\{MarqueRepository,PanierRepository,CategorieRepository,ArticleFavoriRepository};
+use App\Repository\{MarqueRepository,PanierRepository,CategorieRepository,ArticleFavoriRepository, ArticleRepository};
 
 class StripePaymentController extends AbstractController
 {
@@ -19,9 +19,11 @@ class StripePaymentController extends AbstractController
     private EntityManagerInterface $entityManager;
 
     private PanierRepository $repositoryPanier;
+    private ArticleRepository $repositoryArticle;
 
 
     private array $panier = [];
+    private Article $article;
 
     /**
      * Constructeur de la classe
@@ -31,12 +33,13 @@ class StripePaymentController extends AbstractController
      * @param ArticleFavoriRepository $repositoryArticleFavori
      * @param PanierRepository $repositoryPanier
      */
-    public function __construct(EntityManagerInterface $entityManager, UrlGeneratorInterface $urlGenerator, PanierRepository $repositoryPanier)
+    public function __construct(EntityManagerInterface $entityManager, UrlGeneratorInterface $urlGenerator, PanierRepository $repositoryPanier, ArticleRepository $repositoryArticle)
     {
         $this->entityManager = $entityManager; 
         $this->urlGenerator = $urlGenerator;
 
         $this->repositoryPanier = $repositoryPanier;
+        $this->repositoryArticle = $repositoryArticle;
     }
     
     #[Route('/panier/payment', name:'panier.payment', methods:['GET'])]
@@ -45,28 +48,28 @@ class StripePaymentController extends AbstractController
     {
         $user = $this->getUser();
 
-        $panier = $this->entityManager->getRepository(Panier::class)->findBy(["utilisateur" => $user]);
+        $this->panier = $this->entityManager->getRepository(Panier::class)->findBy(["utilisateur" => $user, "isDone" => false]);
 
-        if(!$panier)
+        if(!$this->panier)
         {
             $this->addFlash("error", "Impossible de procéder au paiement pour le moment, veuillez réessayer.");
 
             return $this->redirectToRoute("home.panier");
         }
 
-        $paymentStripe = []; // Assurez-vous que ce tableau est initialisé avant la boucle
+        $paymentStripe = [];
 
-        for ($i = 0; $i < count($panier); $i++) 
+        for ($i = 0; $i < count($this->panier); $i++) 
         {
             $paymentItem = [
                 'price_data' => [
                     'currency' => 'EUR',
-                    'unit_amount' => $panier[$i]->getArticle()->getPrix() * 100,
+                    'unit_amount' => $this->panier[$i]->getArticle()->getPrix() * 100,
                     'product_data' => [
-                        'name' => $panier[$i]->getArticle()->getNomArticle(),
+                        'name' => $this->panier[$i]->getArticle()->getNomArticle(),
                     ],
                 ],
-                'quantity' => $panier[$i]->getQuantite(),
+                'quantity' => $this->panier[$i]->getQuantite(),
             ];
             $paymentStripe[] = $paymentItem;
         }
@@ -89,20 +92,42 @@ class StripePaymentController extends AbstractController
             //Taxe en fonction du pays 'automatic_tax' => ['enabled'],
             ]);
 
-        // Une fois que le paiement est validé, il faut décréménter la quantité et vider le panier. 
-
         return new RedirectResponse($checkout_session->url);
     }
 
     #[Route('panier/success', name:'payment_success')]
     public function StripeSuccess(): Response
     {
-        return $this->redirectToRoute("home.panier");
+        $user = $this->getUser();
+
+        $this->panier = $this->repositoryPanier->findBy(["utilisateur" => $user, "isDone" => false]);
+
+        for($i = 0; $i < count($this->panier); $i++)
+        {
+            $this->article = $this->repositoryArticle->findOneBy(["id" => $this->panier[$i]->getArticle()->getId()]);
+            
+            $this->article->setQuantiteStock($this->article->getQuantiteStock() - $this->panier[$i]->getQuantite());
+            
+            $this->panier[$i]->setIsDone(true);
+            
+            $this->entityManager->persist($this->article);
+            $this->entityManager->persist($this->panier[$i]);
+
+            $this->entityManager->flush();
+        }
+
+        $this->addFlash("success", "Votre paiement a été validé !");
+
+        // On récupère le panier vide pour refresh l'état de l'icône. 
+        $this->panier = $this->repositoryPanier->findBy(["utilisateur" => $user, "isDone" => false]);
+
+        return $this->redirectToRoute("articles.all", ["panier" => $this->panier]);
     }
 
     #[Route('panier/error', name:'payment_error')]
     public function StripeError(): Response
     {
+        $this->addFlash("error","Une erreur est survenue lors du paiement, veuillez réessayer.");
         return $this->redirectToRoute("home.panier");
     }
 }

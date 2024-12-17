@@ -1,9 +1,9 @@
 <div class="container-full">
     <div class="row align-items-center mb-3"> 
-        <div class="col-md-8 mt-2">
+        <div class="col-md-8">
             <h4 class="mt-3 text-uppercase fw-bold p-1"> {{ sentence }} </h4>
         </div>
-        <div class="col-md-4 mt-5">
+        <div class="col-md-4 mt-3">
             {% if form is defined %}
                 {% include "base/_searchData.html.twig" with { form: form } only %}
             {% endif %}

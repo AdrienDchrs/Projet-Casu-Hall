@@ -1,4 +1,4 @@
-{% extends "base.html.twig" %}
+{% extends "base/base.html.twig" %}
 
 {% block title %} Casu'Hall - Ajouter une marque {% endblock %}
 
@@ -15,8 +15,8 @@
         {% endfor %}
     {% endfor %}
 
-    <h4 class = "p-2 mt-3 text-uppercase fw-bold mb-4 text-center"> Ajouter une marque </h4>
-    <div class="container d-flex align-items-center mb-4 mt-5">
+    <h4 class = "p-2 mt-3 text-uppercase fw-bold text-center"> {% trans %} Ajouter une marque {% endtrans %}</h4>
+    <div class="container d-flex align-items-center mb-5 mt-4">
         <div class="p-4 border border-black bg-light rounded mx-auto shadow shadow-lg">
             {{ form_start(form) }}
                 {{ form_widget(form.action) }}
@@ -25,9 +25,13 @@
                     {{ form_widget(form.nomMarque)}}
                 </div> 
 
-                <div class="row mb-2">
+                <div class="row">
                     {{ form_label(form.imageFile)}}
                     {{ form_widget(form.imageFile)}}
+                </div> 
+
+                <div class="row mb-2">
+                    <p class="small justify fst-italic"> {% trans %} Veuillez privilégier, s'il vous plaît, des images en 32x32. {% endtrans %} </p>
                 </div> 
 
                 <div class="row">

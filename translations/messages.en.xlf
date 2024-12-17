@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" version="1.2">
+  <file source-language="fr" target-language="en" datatype="plaintext" original="file.ext">
+    <header>
+      <tool tool-id="symfony" tool-name="Symfony"/>
+    </header>
+    <body>
+      <!-- Nav Bar -->
+      <trans-unit id="Nos marques" resname="Nos marques">
+        <source>Nos marques </source>
+        <target>Our brands </target>
+      </trans-unit>
+      <trans-unit id="Notre histoire" resname="Notre histoire">
+        <source>Notre histoire </source>
+        <target>Our story </target>
+      </trans-unit>
+      <trans-unit id="Catégories" resname="Catégories">
+        <source>Catégories </source>
+        <target>Categories </target>
+      </trans-unit>
+      <trans-unit id="Tous nos articles" resname="Tous nos articles">
+        <source>Tous nos articles</source>
+        <target>All our articles</target>
+      </trans-unit>
+      <trans-unit id="Nous contacter" resname="Nous contacter">
+        <source>Nous contacter</source>
+        <target>Contact us</target>
+      </trans-unit>
+      <trans-unit id="Gestion de l'application" resname="Gestion de l'application">
+        <source>Gestion de l'application </source>
+        <target>Application management </target>
+      </trans-unit>
+      <trans-unit id="Ajouter un article" resname="Ajouter un article">
+        <source>Ajouter un article</source>
+        <target>Add an article</target>
+      </trans-unit>
+      <trans-unit id="Ajouter une catégorie" resname="Ajouter une catégorie">
+        <source>Ajouter une catégorie</source>
+        <target>Add a categorie</target>
+      </trans-unit>
+      <trans-unit id="Ajouter" resname="Ajouter">
+        <source>Ajouter</source>
+        <target>Add</target>
+      </trans-unit>
+      <!-- Ajouter une marque -->
+      <trans-unit id="uVyAH0v" resname="Votre marque existe déjà, veuillez réessayer.">
+        <source>Votre marque existe déjà, veuillez réessayer.</source>
+        <target>Your brand is already create, please try again. </target>
+      </trans-unit>
+      <trans-unit id="yLP7OIz" resname="Ajouter une marque">
+        <source>Ajouter une marque</source>
+        <target>Add a brand</target>
+      </trans-unit>
+      <trans-unit id="form.nom_marque.label" resname="form.nom_marque.label">
+        <source>Nom *:</source>
+        <target>Name *:</target>
+      </trans-unit>
+      <trans-unit id="form.logo_marque.label" resname="form.logo_marque.label">
+        <source>Logo *:</source>
+        <target>Logo *:</target>
+      </trans-unit>
+      <trans-unit id="form.ajouter_marque.bouton" resname="form.ajouter_marque.bouton">
+        <source>Ajouter la marque</source>
+        <target>Add the brand</target>
+      </trans-unit>
+      <trans-unit id="form.supprimer_marque.bouton" resname="form.supprimer_marque.bouton">
+        <source>Supprimer la marque</source>
+        <target>Delete the brand</target>
+      </trans-unit>
+      <trans-unit id="form.choisir_fichier" resname="form.choisir_fichier">
+        <source> Choisir un fichier </source>
+        <target> Choose a file </target>
+      </trans-unit>
+      <trans-unit id="zdGaz48" resname="Veuillez privilégier, s'il vous plaît, des images en 32x32.">
+        <source>Veuillez privilégier, s'il vous plaît, des images en 32x32.</source>
+        <target>Please use 32x32 images.</target>
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

@@ -1,4 +1,4 @@
-{% extends "base.html.twig" %}
+{% extends "base/base.html.twig" %}
 
 {% block title %} Casu'Hall - Modifier mon article {% endblock %}
 
@@ -20,7 +20,7 @@
         <h4 class = "p-2 mt-3 text-uppercase fw-bold"> Modifier mon article </h4>
     </div>
     <div class="container d-flex align-items-center mb-4 mt-2">
-        <div class="p-4 border border-black bg-light rounded mx-auto">
+        <div class="p-4 border border-black bg-light rounded mx-auto shadow shadow-lg">
             {{ form_start(form) }}
                 <div class="row mb-2">
                     {{ form_label(form.nomArticle)}}

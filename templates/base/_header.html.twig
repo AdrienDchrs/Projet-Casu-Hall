@@ -4,15 +4,15 @@
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarColor04" aria-controls="navbarColor04" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"> </span>
         </button>
-        <div class="collapse navbar-collapse" id="navbarColor04">
+        <div class="collapse navbar-collapse">
             <ul class="navbar-nav me-auto">
                 <li class="liste-effect nav-item dropdown">
-                    <a class="nav-link dropdown-toggle mx-2" data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false"> Nos marques </a>
+                    <a class="nav-link dropdown-toggle mx-2" data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">{% trans %} Nos marques {% endtrans %}</a>
                     <div class="dropdown-menu fade">
                         {% if not marques is same as([]) %}
                             {% for marque in marques %}
-                                <a id="menu-marques-{{ marque.idMarque }}" class="dropdown-item d-flex" href="{{  path('articles.articleMarque', {'id': marque.idMarque}) }}"> 
-                                    <img src="{{ vich_uploader_asset(marque, 'imageFile') }}" class="img-fluid">
+                                <a id="menu-marques-{{ marque.idMarque }}" class="dropdown-item d-flex" href="{{ path('articles.articleMarque', {'id': marque.idMarque}) }}"> 
+                                    <img src="{{ vich_uploader_asset(marque, 'imageFile') }}" class="img-fluid" alt="{{ marque.nomMarque }}">
                                     <span class="ms-2 mt-1"> {{ marque.nomMarque }}  </span>
                                 </a>
                             {% endfor %}
@@ -20,67 +20,103 @@
                     </div>
                 </li> 
                 <li class="liste-effect nav-item">
-                    <a class="nav-link mx-2" href="{{ path('home.notre-histoire') }}"> Notre histoire </a>
+                    <a class="nav-link mx-2" href="{{ path('home.notre-histoire') }}"> {% trans %} Notre histoire {% endtrans %} </a>
                 </li>
                 <li class="liste-effect nav-item dropdown">
-                    <a class="nav-link dropdown-toggle mx-2" data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false"> Catégories </a>
+                    <a class="nav-link dropdown-toggle mx-2" data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false"> {% trans %} Catégories {% endtrans %}</a>
                     <div class="dropdown-menu fade" id="categoryDropdown">
-                        <a class="dropdown-item" href="{{ path('articles.all')}}"> Tous nos articles </a>
+                        <a class="dropdown-item" href="{{ path('articles.all')}}"> {% trans %} Tous nos articles {% endtrans %} </a>
                         <div class="text-center">
                             <hr class="dropdown-divider w-50 mx-auto">
                         </div>
                         {% for categorie in categories %}
-                            <a id="menu-categorie-{{ categorie.idCategorie }}" class="dropdown-item" href="{{  path('articles.articleCategorie', {'id': categorie.idCategorie}) }}">{{ categorie.nomCategorie }}</a>
+                            <a id="menu-categorie-{{ categorie.idCategorie }}" class="dropdown-item" href="{{ path('articles.articleCategorie', {'id': categorie.idCategorie}) }}">{{ categorie.nomCategorie }}</a>
                         {% endfor %}
                     </div>
                 </li>
                 <li class="liste-effect nav-item">
-                        <a class="nav-link mx-2" href="{{ path('home.contact') }}"> Nous contacter </a>
+                    <a class="nav-link mx-2" href="{{ path('home.contact') }}"> {% trans %} Nous contacter {% endtrans %}</a>
                 </li>
-                {% if app.user %}
-                    {% for role in user.roles %}
-                        {% if role == "ROLE_ADMIN" %}
-                            <li class="liste-effect nav-item dropdown">
-                                <a class="nav-link dropdown-toggle mx-2" data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false"> Gestion de l'application </a>
-                                <div class="dropdown-menu fade">
-                                    <a class="dropdown-item" href="{{ path('home.ajouter-article') }}"> Ajouter un article </a>
-                                    <a class="dropdown-item" href="{{ path('home.ajouter-marque') }}"> Ajouter une marque </a>
-                                    <a class="dropdown-item" href="{{ path('home.ajouter-categorie') }}"> Ajouter une catégorie </a>
-                                </div>
-                            </li> 
-                        {% endif %}
-                    {% endfor %}
+                {% if app.user.roles[0] == "ROLE_ADMIN" %}
+                    <li class="liste-effect nav-item dropdown">
+                        <a class="nav-link dropdown-toggle mx-2" data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false"> {% trans %} Gestion de l'application {% endtrans %} </a>
+                        <div class="dropdown-menu fade">
+                            <a class="dropdown-item" href="{{ path('home.ajouter-article') }}"> 
+                                <img src="/assets/images/plus.png" alt="add">
+                                <span class="ms-2 mt-1"> {% trans %} Ajouter un article {% endtrans %} </span> 
+                            </a>
+                            <a class="dropdown-item" href="{{ path('home.ajouter-marque') }}"> 
+                                <img src="/assets/images/plus.png" alt="add">
+                                <span class="ms-2 mt-1"> {% trans %} Ajouter une marque {% endtrans %} </span> 
+                            </a>
+                            <a class="dropdown-item" href="{{ path('home.ajouter-categorie') }}"> 
+                                <img src="/assets/images/plus.png" alt="add">
+                                <span class="ms-2 mt-1"> {% trans %} Ajouter une catégorie {% endtrans %} </span> 
+                            </a>
+                        </div>
+                    </li> 
                 {% endif %}
             </ul>
 
-            <div class="navbar-nav flex-row mt-3">
-                <div class="nav-item mx-2 position-relative ms-2">
+            <div class="navbar-nav flex-row align-items-center">
+                <div class="nav-item mx-2">
                     {% set chemin = "/assets/images/panier" %}
                     {% set chemin = chemin ~ (app.user ? (panier|length > 0 ? "_rempli.png" : ".png") : (emptyUserPanier|length > 0 ? "_rempli.png" : ".png")) %}
-                    <a href="{{ path('home.panier') }}" class="d-inline-block"> <img src ="{{ chemin }}" alt="panier" title="Mon panier"> </a> 
+                    <a href="{{ path('home.panier') }}" class="d-inline-block">
+                        <img src="{{ chemin }}" alt="panier" title="Mon panier" class="align-middle">
+                    </a>
                 </div>
 
-                <div class="nav-item mx-2 ms-2">
+                <div class="nav-item mx-2">
                     {% set chemin = "/assets/images/favori_" %}
                     {% set chemin = chemin ~ (app.user ? (articlesFavoris|length > 0 ? "plein.png" : "vide.png") : (emptyUserFavoris|length > 0 ? "plein.png" : "vide.png")) %}
-                
-                    <a href="{{  path('articles-favoris') }}"> 
-                        <img src= {{ chemin }} alt="favori" title="Mes articles favoris">
+                    <a href="{{ path('articles-favoris') }}">
+                        <img src="{{ chemin }}" alt="favori" title="Mes articles favoris" class="align-middle">
                     </a>
                 </div>
 
                 {% if app.user %}
-                    <div class="nav-item mx-2 ms-2">
-                        <a href = "{{  path('edition.compte', {'id': app.user.id}) }}"> <img src="/assets/images/connexion.png" alt="compte" title="Mon espace personnel"> </a> 
-                    </div>
-
-                    <div class="nav-item mx-2 ms-2">
-                        <a href = "{{ path('security.deconnexion') }}"> <img src="/assets/images/deconnexion.png" alt="deconnexion" title="Se déconnecter"> </a> 
+                    <div class="nav-item mx-2">
+                        <a href="{{ path('edition.compte', {'id': app.user.id}) }}">
+                            <img src="/assets/images/connexion.png" alt="compte" title="Mon espace personnel" class="align-middle">
+                        </a>
                     </div>
                 {% else %}
                     <div class="nav-item mx-2">
-                        <a href = "{{ path('security.connexion') }}"> <img src="/assets/images/connexion.png" alt="connexion" title="Se connecter"> </a> 
+                        <a href="{{ path('security.connexion') }}">
+                            <img src="/assets/images/connexion.png" alt="connexion" title="Se connecter" class="align-middle">
+                        </a>
                     </div>
+                {% endif %}
+
+                {% if locales|length > 1 %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="{{ path('home.change_locale', {'locale': app.request.locale }) }}" role="button" aria-haspopup="true" aria-expanded="false">
+                            <img src="{{ asset('/assets/images/' ~ app.request.locale ~ '.png') }}" alt="{{ app.request.locale }}" class="align-middle">
+                        </a>
+                        <div class="dropdown-menu fade">
+                            {% for locale in locales %}
+                                {% if locale != app.request.locale %}
+                                    <div class="d-flex"> 
+                                        <a class="dropdown-item fw-bold" href="{{ path('home.change_locale', {'locale': locale }) }}">
+                                            <img src="{{ asset('/assets/images/' ~ locale ~ '.png') }}" alt="{{ locale }}" class="align-middle">
+                                            {{ locale | upper }}
+                                        </a>
+                                    </div>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                    </li>
+                {% else %}
+                    {% set locale = locales|first %}
+                    {% if locale != app.request.locale %}
+                        <div class="nav-item">
+                            <a href="{{ path('home.change_locale', {'locale': locale }) }}">
+                                <img src="{{ asset('/assets/images/' ~ locale ~ '.png') }}" alt="{{ locale }}" class="align-middle">
+                                {{ locale | upper }}
+                            </a>
+                        </div>
+                    {% endif %}
                 {% endif %}
             </div>
         </div>
@@ -89,9 +125,7 @@
 
 <div class="carousel slide" data-bs-ride="carousel">
     <div class="carousel-inner">
-        {% set estConnecté = 0 %}
         {% if app.user %}
-            {% set estConnecté = 1 %}
             {% set sentences = ['Bienvenue ' ~ app.user.prenomUtilisateur] %}
         {% else %}
             {% set sentences = [] %}
@@ -104,20 +138,11 @@
             {% set isActive = (i == activeIndex) %}
             <div class="carousel-item {% if isActive %}active{% endif %}">
                 <div class="container-fluid bg-black d-flex align-items-center justify-content-center" id="{{ i }}">
-                    <img class="img-carrousel" src="/assets/images/CasuHall_WHITE.png">
+                    <img class="img-carrousel img-fluid" src="/assets/images/CasuHall_WHITE.png">
                     <h3 class="text-center text-white p-2 text-uppercase">{{ sentences[i] }}</h3>
-                    <img class="img-carrousel" src="/assets/images/CasuHall_WHITE.png">
+                    <img class="img-carrousel img-fluid" src="/assets/images/CasuHall_WHITE.png">
                 </div>
             </div>
         {% endfor %}
     </div> 
-</div>  
-
-<!-- 
-<nav aria-label="breadcrumb" class="mt-4 ms-2">
-    <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="#">Accueil</a></li>
-        <li class="breadcrumb-item"><a href="#">Catégorie</a></li>
-        <li class="breadcrumb-item active" aria-current="page">Sous-catégorie</li>
-    </ol>
-</nav> -->
+</div>

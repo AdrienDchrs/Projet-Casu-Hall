@@ -3,6 +3,7 @@
 namespace App\Form;
 
 use App\Entity\Utilisateur;
+use App\Validator\StrongPassword;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Component\Form\{AbstractType,FormBuilderInterface};
@@ -10,8 +11,6 @@ use Symfony\Component\Form\Extension\Core\Type\{TelType,TextType,DateType,EmailT
 
 class InscriptionType extends AbstractType
 {
-    private $dateTimeImmutableTransformer;
-
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
@@ -27,18 +26,15 @@ class InscriptionType extends AbstractType
                     'class' => 'fw-bold',
                 ],
                 'constraints' => [
-                    new Assert\Length(['min' => 1, 'max' => 1]),
-                    new Assert\NotBlank(),
-                    new Assert\NotNull(), 
-                    new Assert\Choice(['choices' => [0, 1]])
+                    new Assert\NotBlank()
                 ],
             ])
             ->add('prenomUtilisateur', TextType::class, [
                 'attr'          => [
                     'minlength'     => '3', 
                     'maxlength'     => '50',
-                    'placeholder'   => 'Valentino', 
-                    'class'         => 'form-control'
+                    'placeholder'   => 'Jean', 
+                    'class'         => 'p-2 border rounded mb-2'
                     ],
                 'label' => 'Prénom : *',
                 'label_attr' => [
@@ -49,15 +45,14 @@ class InscriptionType extends AbstractType
                 'constraints'   => [
                     new Assert\Length(['min' => 3, 'max' => 50]),
                     new Assert\NotBlank(),
-                    new Assert\NotNull()
                 ]
             ])
             ->add('nomUtilisateur', TextType::class, [
                 'attr'          => [
-                    'minlength'     => '3', 
+                    'minlength'     => '2', 
                     'maxlength'     => '50',
-                    'placeholder'   => 'Cher',
-                    'class'         => 'form-control'
+                    'placeholder'   => 'Dupont',
+                    'class'         => 'p-2 border rounded mb-2'
                     ],
                 'label' => 'Nom : *',
                 'label_attr' => [
@@ -66,9 +61,8 @@ class InscriptionType extends AbstractType
                     'for'   => 'nom',
                 ],
                 'constraints'   => [
-                    new Assert\Length(['min' => 3, 'max' => 50]),
-                    new Assert\NotBlank(),
-                    new Assert\NotNull()
+                    new Assert\Length(['min' => 2, 'max' => 50]),
+                    new Assert\NotBlank()
                 ]
             ])
             ->add('dateNaissance', DateType::class, [
@@ -84,58 +78,36 @@ class InscriptionType extends AbstractType
                 ],
                 'constraints' => [
                     new Assert\NotBlank(),
-                    new Assert\NotNull(), 
                     new Assert\Range([
                         'min' => new \DateTimeImmutable('1900-01-01'),
-                        'max' => new \DateTimeImmutable('now'),
-                        'maxMessage' => 'Vous devez être né après 1900',
+                        'max' => new \DateTimeImmutable('now')
                     ]),
                 ],
             ])
             ->add('email', EmailType::class, [
                 'attr'          => [
-                    'minlength'     => '10', 
+                    'minlength'     => '6', 
                     'maxlength'     => '100',
                     'placeholder'   => 'exemple@gmail.com', 
-                    'class'         => 'form-control'
+                    'class'         => 'p-2 border rounded mb-2'
                     ],
-                'label' => 'Adresse e-mail  : *',
+                'label' => 'Adresse mail : *',
                 'label_attr' => [
                     'class' => 'fw-bold mt-2',
                     'id'    => 'mail',
                     'for'   => 'mail',
                 ],
                 'constraints'   => [
-                    new Assert\Length(['min'=> 10, 'max' => 100]),
-                    new Assert\NotBlank(),
-                    new Assert\NotNull()
+                    new Assert\Length(['min'=> 6, 'max' => 100]),
+                    new Assert\NotBlank()
                 ]
             ])
-            ->add('telephone', TelType::class, [
-                'attr' => [
-                    'maxlength' => '17',
-                    'class' => 'form-control',
-                    'value' => '+33',
-                    'placeholder' => '+33 6 12 34 56 78',
-                ],
-                'label' => 'Numéro de téléphone : ',
-                'label_attr' => [
-                    'class' => 'fw-bold mt-2',
-                    'id' => 'telephone',
-                    'for' => 'telephone',
-                ],
-                'required' => false,
-                'constraints' => [
-                    new Assert\Length(['max' => 17]),
-                ]
-            ])
-            
             ->add('plainPassword', RepeatedType::class, [
                 'type'          => PasswordType::class,
                 'first_options' => [
                     'attr'          => [
                         'placeholder' => '********',
-                        'class'       => 'form-control',
+                        'class'       => 'p-2 border rounded mb-2',
                         'type'        => 'password'
                     ],
                     'label'     => 'Mot de passe : *', 
@@ -143,10 +115,9 @@ class InscriptionType extends AbstractType
                 ],
                 'second_options'=> [
                     'attr'          => [
-                        'class'       => 'form-control',
+                        'class'       => 'p-2 border rounded mb-2',
                         'placeholder' => '********',
                         'id'          => 'password_second',
-                        'class'       => 'form-control',
                         'type'        => 'password'
                     ],
                     'label'     => 'Confirmer le mot de passe : * ',
@@ -155,7 +126,7 @@ class InscriptionType extends AbstractType
                 'constraints'   => [
                     new Assert\Length(['min' => 8, 'max' => 255]),
                     new Assert\NotBlank(),
-                    new Assert\NotNull()
+                    new StrongPassword()
                 ], 
             ])
 

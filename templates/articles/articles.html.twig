@@ -1,4 +1,4 @@
-{% extends "base.html.twig" %}
+{% extends "base/base.html.twig" %}
 
 {% block title %} Casu'Hall - {{ nomMarque }} {% endblock %}
 
@@ -16,16 +16,16 @@
     {% endfor %}
 
     <div class="container-fluid">
-        <div class="row align-items-center">
+        <div class="row align-items-center mb-4">
             {% if articles.getTotalItemCount > 0 %}
                 <div class="col-md-8">
                     <div class="d-flex">
                         {% set word = articles.getTotalItemCount <= 1 ? "résultat" : "résultats" %}
-                        <h4 class="p-1 mt-4 text-uppercase fw-bold">{{ nomMarque }}</h4>
-                        <h4 class="p-1 mt-4">({{ articles.getTotalItemCount }} {{ word }})</h4>
+                        <h4 class="p-1 mt-2 text-uppercase fw-bold">{{ nomMarque }}</h4>
+                        <h4 class="p-1 mt-2">({{ articles.getTotalItemCount }} {{ word }})</h4>
                     </div>
                 </div>
-                <div class="col-md-4 text-end mt-5">
+                <div class="col-md-4 text-end mt-3">
                     {% include "base/_searchData.html.twig" with { form: form } only %}
                 </div>
             {% endif %}
@@ -46,8 +46,8 @@
                         <a class="text-decoration-none text-black {% if article.quantiteStock == 0 %} disabled opacity-50 {% endif %}"
                             {% if article.quantiteStock > 0  or (article.quantiteStock == 0 and isAdmin) %}
                                 href="{{ path('article.articleDetail', {'id': article.id}) }}"
-                            {% endif %}>
-                            <img src="{{ vich_uploader_asset(article, 'imageFile') }}" class="card-img-top" alt="Image principal du vêtement">
+                            {% endif %}>                           
+                            <img src="{{asset('assets/uploads/articles/300x300-' ~ article.images[0].name)}}" class="card-img-top" alt="{{ article.nomArticle }}">
                             <div class="card-body">
                                 <h5 class="card-title fw-bold">{{ article.nomArticle }}</h5>
                                 <div class="card-text"> 
@@ -56,6 +56,10 @@
                                 {% if article.quantiteStock == 0 %}
                                     <div class="card-text">
                                         <p class="text-danger fw-bold"> Stock épuisé ! Bientôt de retour...
+                                    </div>
+                                {% else %}
+                                    <div class="card-text"> 
+                                        <p class="text-success fw-bold"> Stock disponible. </p>
                                     </div>
                                 {% endif %}
                             </div>

@@ -8,6 +8,7 @@ use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\{Request,Response};
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use App\Repository\{MarqueRepository,PanierRepository,CategorieRepository,ArticleFavoriRepository};
+use App\Service\CookieService;
 
 class HomeController extends AbstractController
 {
@@ -16,16 +17,15 @@ class HomeController extends AbstractController
     private CategorieRepository $repositoryCategorie;
     private ArticleFavoriRepository $repositoryArticleFavori;
 
-    private EntityManagerInterface $manager;
-
     private array $marques; 
     private array $categories;
-    private array $articlesFavoris;
-    private array $articles;
-    private array $panier;
+    private array $panier = [];
+    private array $articlesFavoris = [];
 
     private array $emptyUserFavoris = [];
     private array $emptyUserPanier  = [];
+
+    private CookieService $cookieService;
 
     /**
      * Constructeur de la classe
@@ -36,17 +36,17 @@ class HomeController extends AbstractController
      * @param EntityManagerInterface $manager
      * @param ArticleRepository $repositoryArticle
      */
-    public function __construct(MarqueRepository $repositoryMarque,CategorieRepository $repositoryCategorie, EntityManagerInterface $manager, ArticleFavoriRepository $repositoryArticleFavori, PanierRepository $repositoryPanier)
+    public function __construct(MarqueRepository $repositoryMarque,CategorieRepository $repositoryCategorie, ArticleFavoriRepository $repositoryArticleFavori, PanierRepository $repositoryPanier, CookieService $cookieService)
     {
         $this->repositoryMarque = $repositoryMarque;
         $this->repositoryPanier = $repositoryPanier;
         $this->repositoryCategorie = $repositoryCategorie;
         $this->repositoryArticleFavori = $repositoryArticleFavori;
 
-        $this->manager = $manager;
-
         $this->marques = $this->repositoryMarque->findBy([], ['nomMarque' => 'ASC']);
         $this->categories = $this->repositoryCategorie->findAll();
+
+        $this->cookieService = $cookieService;
     }
 
     /**
@@ -57,19 +57,15 @@ class HomeController extends AbstractController
     public function Index(Request $request): Response
     {
         $user = $this->getUser();
-        
-        $this->articlesFavoris = [];
-        $this->panier = [];
-    
         if($user)
         {
             $this->articlesFavoris = $this->repositoryArticleFavori->findBy(['utilisateur' => $user]);
-            $this->panier = $this->repositoryPanier->findBy(['utilisateur' => $user]); 
+            $this->panier = $this->repositoryPanier->findBy(['utilisateur' => $this->getUser(), "isDone" => false]);
         }
         else 
         {
-            $this->emptyUserFavoris = $this->getCookieUserNotConnected($request,'favoris',$this->emptyUserFavoris);
-            $this->emptyUserPanier = $this->getCookieUserNotConnected($request,'panier',$this->emptyUserPanier);  
+            $this->emptyUserFavoris = $this->cookieService->getCookieUserNotConnected($request,'favoris',$this->emptyUserFavoris);
+            $this->emptyUserPanier = $this->cookieService->getCookieUserNotConnected($request,'panier',$this->emptyUserPanier);  
         }
     
         
@@ -82,22 +78,19 @@ class HomeController extends AbstractController
      * Ce contrôleur permet de visualiser la page qui explique l'histoire du style casual et de la boutique
      * @return Response
      */
-    #[Route('/notre-histoire', 'home.notre-histoire', methods:['GET', 'POST'])]
+    #[Route('/notre-histoire', 'home.notre-histoire', methods:['GET'])]
     public function OurHistory(Request $request): Response
     {
         $user = $this->getUser();
-        $this->articlesFavoris = [];
-        $this->panier = [];
-
         if($user)
         {
             $this->articlesFavoris = $this->repositoryArticleFavori->findBy(['utilisateur' => $user]);
-            $this->panier = $this->repositoryPanier->findBy(['utilisateur' => $user]);
+            $this->panier = $this->repositoryPanier->findBy(['utilisateur' => $this->getUser(), "isDone" => false]);
         }
         else
         {
-            $this->emptyUserFavoris = $this->getCookieUserNotConnected($request,'favoris',$this->emptyUserFavoris);
-            $this->emptyUserPanier = $this->getCookieUserNotConnected($request,'panier',$this->emptyUserPanier);  
+            $this->emptyUserFavoris = $this->cookieService->getCookieUserNotConnected($request,'favoris',$this->emptyUserFavoris);
+            $this->emptyUserPanier = $this->cookieService->getCookieUserNotConnected($request,'panier',$this->emptyUserPanier);  
         }
 
         return $this->render('notre-histoire.html.twig', ['marques' => $this->marques, 'categories' => $this->categories,
@@ -105,22 +98,27 @@ class HomeController extends AbstractController
                                                           'emptyUserFavoris' => $this->emptyUserFavoris, 'emptyUserPanier' => $this->emptyUserPanier]);
     }
 
-     /** 
-     * Fonction privée qui permet de récupérer les favoris d'un utilisateur non connecté
-     * @param Request sert à établir une requête HTTP pour récupérer les cookies de la session.
-     * @param cookieName adapte la récupération de cookie en fonction du nom donné à la création
-     * @param array pour inclure tous les cookie dans not
+    /**
+     * Ce contrôleur nous sert à changer de langue
      */
-    private function getCookieUserNotConnected(Request $request, $cookieName, $array)
+    #[Route('/change-locale/{locale}', 'home.change_locale', methods:['GET', 'POST'])]
+    public function ChangeLocale(Request $request, $locale): Response
     {
-        $cookie = json_decode($request->cookies->get($cookieName, '[]'), true);
-            
-        if(!empty($cookie))
-            $array = $this->manager->getRepository(Article::class)->findBy(['id' => $cookie]);
-        else 
-            $array = [];
+        $user = $this->getUser();
+        if($user)
+        {
+            $this->articlesFavoris = $this->repositoryArticleFavori->findBy(['utilisateur' => $user]);
+            $this->panier = $this->repositoryPanier->findBy(['utilisateur' => $this->getUser(), "isDone" => false]);
+        }
+        else
+        {
+            $this->emptyUserFavoris = $this->cookieService->getCookieUserNotConnected($request,'favoris',$this->emptyUserFavoris);
+            $this->emptyUserPanier = $this->cookieService->getCookieUserNotConnected($request,'panier',$this->emptyUserPanier);  
+        }
 
-        return $array; 
+        $request->getSession()->set('_locale',$locale);
+        
+        return $this->redirect($request->headers->get('referer'));
     }
 }
 ?> 

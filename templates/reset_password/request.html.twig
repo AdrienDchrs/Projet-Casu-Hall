@@ -1,24 +1,24 @@
-{% extends 'base.html.twig' %}
+{% extends 'base/base.html.twig' %}
 
 {% block title %} Casu-Hall - Réinitialisation du mot de passe {% endblock %}
 
 {% block body %}
     <div class= "align-items-center text-center"> 
-        <h4 class = "p-2 mt-3 text-uppercase fw-bold"> Réinitialiser le mot de passe </h4>
+        <h4 class = "p-2 mt-3 text-uppercase fw-bold"> Réinitialisation du mot de passe </h4>
     </div>
     <div class="container d-flex align-items-center mb-5 mt-3">
-        <div class="p-4 border border-black bg-light rounded mx-auto">
+        <div class="p-4 border border-black bg-light rounded mx-auto shadow shadow-lg">
             {{ form_start(requestForm) }}
-                <div class="row">
+                <div class="row mt-4">
                     {{ form_label(requestForm.email) }}
                     {{ form_widget(requestForm.email) }}
                 </div>
 
-                <div class="row mt-1 mb-3">
-                    <small> <i> En rentrant votre adresse e-mail, vous recevrez un lien afin de réinitialiser votre mot de passe. </i> </small>
+                <div class="row mt-1 mb-3 small">
+                    <i> En rentrant votre adresse e-mail, vous recevrez un lien afin de réinitialiser votre mot de passe. </i>
                 </div>
 
-                <div class="row mt-2">
+                <div class="row mt-5">
                     {{ form_widget(requestForm.submit) }}
                 </div>
             {{ form_end(requestForm) }}

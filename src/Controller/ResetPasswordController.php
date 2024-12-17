@@ -17,6 +17,7 @@ use Symfony\Component\HttpFoundation\{Request,Response,RedirectResponse};
 use SymfonyCasts\Bundle\ResetPassword\Controller\ResetPasswordControllerTrait;
 use SymfonyCasts\Bundle\ResetPassword\Exception\ResetPasswordExceptionInterface;
 use App\Repository\{PanierRepository,MarqueRepository,CategorieRepository,UtilisateurRepository,ArticleFavoriRepository};
+use App\Service\CookieService;
 
 #[Route('/reset-password')]
 class ResetPasswordController extends AbstractController
@@ -40,6 +41,8 @@ class ResetPasswordController extends AbstractController
 
     private EntityManagerInterface $manager;
 
+    private CookieService $cookieService;
+
     /**
      * Constructeur de la classe
      *
@@ -50,7 +53,7 @@ class ResetPasswordController extends AbstractController
      * @param RepositoryArticlesFavoris $repositoryArticlesFavoris
      * @param EntityManagerInterface $entityManager
      */
-    public function __construct(MarqueRepository $repositoryMarque,CategorieRepository $repositoryCategorie,UtilisateurRepository $repositoryUtilisateur, private ResetPasswordHelperInterface $resetPasswordHelper,private EntityManagerInterface $entityManager, ArticleFavoriRepository $repositoryArticleFavori, PanierRepository $repositoryPanier, EntityManagerInterface $manager)
+    public function __construct(MarqueRepository $repositoryMarque, CategorieRepository $repositoryCategorie, UtilisateurRepository $repositoryUtilisateur, private ResetPasswordHelperInterface $resetPasswordHelper, EntityManagerInterface $manager, ArticleFavoriRepository $repositoryArticleFavori, PanierRepository $repositoryPanier, CookieService $cookieService)
     {
         $this->repositoryMarque         = $repositoryMarque;
         $this->repositoryCategorie      = $repositoryCategorie;
@@ -62,6 +65,8 @@ class ResetPasswordController extends AbstractController
         $this->categories = $repositoryCategorie->findAll();
 
         $this->manager = $manager;
+
+        $this->cookieService = $cookieService;
     }
 
     /**
@@ -74,8 +79,8 @@ class ResetPasswordController extends AbstractController
     #[Route('/reset-password', name: 'app_forgot_password_request')]
     public function request(Request $request, MailerInterface $mailer, TranslatorInterface $translator): Response
     {
-        $this->emptyUserFavoris = $this->getCookieUserNotConnected($request,'favoris',$this->emptyUserFavoris);
-        $this->emptyUserPanier = $this->getCookieUserNotConnected($request,'panier',$this->emptyUserPanier);
+        $this->emptyUserFavoris = $this->cookieService->getCookieUserNotConnected($request,'favoris',$this->emptyUserFavoris);
+        $this->emptyUserPanier = $this->cookieService->getCookieUserNotConnected($request,'panier',$this->emptyUserPanier);
 
         $form = $this->createForm(ResetPasswordRequestFormType::class);
         $form->handleRequest($request);
@@ -94,8 +99,8 @@ class ResetPasswordController extends AbstractController
     #[Route('/check-email', name: 'app_check_email')]
     public function checkEmail(Request $request): Response
     {   
-        $this->emptyUserFavoris = $this->getCookieUserNotConnected($request,'favoris',$this->emptyUserFavoris);
-        $this->emptyUserPanier = $this->getCookieUserNotConnected($request,'panier',$this->emptyUserPanier);
+        $this->emptyUserFavoris = $this->cookieService->getCookieUserNotConnected($request,'favoris',$this->emptyUserFavoris);
+        $this->emptyUserPanier = $this->cookieService->getCookieUserNotConnected($request,'panier',$this->emptyUserPanier);
 
         if (null === ($resetToken = $this->getTokenObjectFromSession())) 
             $resetToken = $this->resetPasswordHelper->generateFakeResetToken();
@@ -114,8 +119,8 @@ class ResetPasswordController extends AbstractController
     #[Route('/reset/{token}', name: 'app_reset_password')]
     public function reset(Request $request, UserPasswordHasherInterface $passwordHasher, TranslatorInterface $translator, string $token = null): Response
     {
-        $this->emptyUserFavoris = $this->getCookieUserNotConnected($request,'favoris',$this->emptyUserFavoris);
-        $this->emptyUserPanier = $this->getCookieUserNotConnected($request,'panier',$this->emptyUserPanier);
+        $this->emptyUserFavoris = $this->cookieService->getCookieUserNotConnected($request,'favoris',$this->emptyUserFavoris);
+        $this->emptyUserPanier = $this->cookieService->getCookieUserNotConnected($request,'panier',$this->emptyUserPanier);
 
         if($token) 
         {
@@ -151,8 +156,8 @@ class ResetPasswordController extends AbstractController
 
             $user->setPassword($passwordHasher->hashPassword($user,$form->get('plainPassword')->getData()));
 
-            $this->entityManager->persist($user); 
-            $this->entityManager->flush();
+            $this->manager->persist($user); 
+            $this->manager->flush();
 
             $this->addflash("success", "Votre mot de passe a été réinitialisé avec succès !");
 
@@ -169,10 +174,10 @@ class ResetPasswordController extends AbstractController
 
     private function processSendingPasswordResetEmail(string $emailFormData, MailerInterface $mailer, TranslatorInterface $translator, Request $request): RedirectResponse
     {
-        $user = $this->entityManager->getRepository(Utilisateur::class)->findOneBy(['email' => $emailFormData]);
+        $user = $this->manager->getRepository(Utilisateur::class)->findOneBy(['email' => $emailFormData]);
 
-        $this->emptyUserFavoris = $this->getCookieUserNotConnected($request,'favoris',$this->emptyUserFavoris);
-        $this->emptyUserPanier = $this->getCookieUserNotConnected($request,'panier',$this->emptyUserPanier);
+        $this->emptyUserFavoris = $this->cookieService->getCookieUserNotConnected($request,'favoris',$this->emptyUserFavoris);
+        $this->emptyUserPanier = $this->cookieService->getCookieUserNotConnected($request,'panier',$this->emptyUserPanier);
 
         // Do not reveal whether a user account was found or not.
         if (!$user) 
@@ -208,22 +213,5 @@ class ResetPasswordController extends AbstractController
 
         return $this->redirectToRoute('app_check_email', ['marques' =>  $this->marques,'categories' =>  $this->categories,'emptyUserFavoris' => $this->emptyUserFavoris, 
                                                           'emptyUserPanier' => $this->emptyUserPanier]);
-    }
-
-    /** 
-     * Fonction privée qui permet de récupérer les favoris d'un utilisateur non connecté
-     * @param Request $request sert à établir une requête HTTP pour récupérer les cookies de la session.
-     */
-    private function getCookieUserNotConnected(Request $request, $cookieName, $array)
-    {
-
-        $cookie = json_decode($request->cookies->get($cookieName, '[]'), true);
-            
-        if(!empty($cookie))
-            $array = $this->manager->getRepository(Article::class)->findBy(['id' => $cookie]);
-        else 
-            $array = [];
-
-        return $array; 
     }
 }

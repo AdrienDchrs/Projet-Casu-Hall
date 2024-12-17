@@ -2,11 +2,13 @@
 
 namespace App\Controller;
 
+use App\Service\ImageService;
 use Doctrine\ORM\EntityManagerInterface;
-use App\Entity\{Marque,Article,Categorie};
 use Symfony\Component\Security\Core\Security;
 use Symfony\Component\Routing\Annotation\Route;
+use App\Entity\{Marque,Article,Categorie,Image};
 use App\Form\{MarqueType,ArticleType,CategorieType};
+use Symfony\Contracts\Translation\TranslatorInterface;
 use Symfony\Component\HttpFoundation\{Request,Response};
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\IsGranted;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -21,6 +23,7 @@ class AdminDataController extends AbstractController
     private ArticleFavoriRepository $repositoryArticleFavori;
 
     private EntityManagerInterface $manager;
+    private TranslatorInterface $translator;
 
     private array $marques; 
     private array $categories;
@@ -28,8 +31,6 @@ class AdminDataController extends AbstractController
     private array $articles;
     private array $panier;
 
-    private array $emptyUserFavoris = [];
-    private array $emptyUserPanier  = [];
 
     /**
      * Constructeur de la classe
@@ -40,7 +41,7 @@ class AdminDataController extends AbstractController
      * @param EntityManagerInterface $manager
      * @param ArticleRepository $repositoryArticle
      */
-    public function __construct(MarqueRepository $repositoryMarque,CategorieRepository $repositoryCategorie, EntityManagerInterface $manager, ArticleFavoriRepository $repositoryArticleFavori, ArticleRepository $repositoryArticle, PanierRepository $repositoryPanier)
+    public function __construct(MarqueRepository $repositoryMarque,CategorieRepository $repositoryCategorie, EntityManagerInterface $manager, ArticleFavoriRepository $repositoryArticleFavori, ArticleRepository $repositoryArticle, PanierRepository $repositoryPanier, TranslatorInterface $translator)
     {
         $this->repositoryMarque = $repositoryMarque;
         $this->repositoryPanier = $repositoryPanier;
@@ -52,6 +53,8 @@ class AdminDataController extends AbstractController
 
         $this->categories = $this->repositoryCategorie->findAll();
         $this->marques = $this->repositoryMarque->findBy([], ['nomMarque' => 'ASC']);
+
+        $this->translator = $translator;
     }
 
     /**
@@ -65,7 +68,7 @@ class AdminDataController extends AbstractController
     public function addMarque(Request $request): Response
     {
         $this->articlesFavoris = $this->repositoryArticleFavori->findBy(['utilisateur' => $this->getUser()]);
-        $this->panier = $this->repositoryPanier->findBy(['utilisateur' => $this->getUser()]);
+        $this->panier = $this->repositoryPanier->findBy(['utilisateur' => $this->getUser(), "isDone" => false]);
 
         $marque = new Marque();
         $form = $this->createForm(MarqueType::class, $marque);
@@ -81,14 +84,15 @@ class AdminDataController extends AbstractController
             {
                 if($marque)
                 {
-                    $this->addFlash("warning", "Votre marque existe déjà, veuillez réessayer.");
+                    $message = $this->translator->trans("Votre marque existe déjà, veuillez réessayer.");
+                    $this->addFlash("warning", $message);
                 }
                 else
-                {
+                {                    
                     $marque = $form->getData();
                     $this->manager->persist($marque);
                     $this->manager->flush();
-                    
+
                     $this->addFlash('success', 'La marque a bien été ajoutée.');
                 }
 
@@ -135,7 +139,7 @@ class AdminDataController extends AbstractController
     public function addCategorie(Request $request): Response
     {
         $this->articlesFavoris = $this->repositoryArticleFavori->findBy(['utilisateur' => $this->getUser()]);
-        $this->panier = $this->repositoryPanier->findBy(['utilisateur' => $this->getUser()]);
+        $this->panier = $this->repositoryPanier->findBy(['utilisateur' => $this->getUser(), "isDone" => false]);
 
         $categorie = new Categorie();
         $form = $this->createForm(CategorieType::class, $categorie);
@@ -200,10 +204,10 @@ class AdminDataController extends AbstractController
     #[IsGranted('ROLE_ADMIN')]
     #[Security('is_granted("ROLE_ADMIN")')]
     #[Route('/ajouter-article', 'home.ajouter-article', methods:['GET', 'POST'])]
-    public function addArticle(Request $request): Response
+    public function addArticle(Request $request, ImageService $imageService): Response
     {
         $this->articlesFavoris = $this->repositoryArticleFavori->findBy(['utilisateur' => $this->getUser()]);
-        $this->panier = $this->repositoryPanier->findBy(['utilisateur' => $this->getUser()]);
+        $this->panier = $this->repositoryPanier->findBy(['utilisateur' => $this->getUser(), "isDone" => false]);
 
         $article = new Article();
         $form = $this->createForm(ArticleType::class, $article, ['marques' => $this->marques, 'categories' => $this->categories]);
@@ -211,25 +215,36 @@ class AdminDataController extends AbstractController
 
         if($form->isSubmitted() && $form->isValid())
         {
+            $lstImages = $form->get('images')->getData();
+            $folder = 'articles';
+            
+            foreach($lstImages as $image)
+            {   
+                $fichier = $imageService->add($image, $folder, 300, 300); 
+                
+                $imgEntity = new Image();
+                $imgEntity->setName($fichier);
+                $article->addImage($imgEntity);
+            }
+
+            
             $article = $form->getData();
+            
+            $this->manager->persist($article);
+            $this->manager->flush();
             
             $this->addFlash('success', 'L\'article a bien été ajoutée.');
 
-            $this->manager->persist($article);
-            $this->manager->flush();
-
-            return $this->redirectToRoute('articles.all', ['marques' =>  $this->marques,
-                                                         'categories' =>  $this->categories]);
+            return $this->redirectToRoute('articles.all', ['marques' =>  $this->marques,'categories' =>  $this->categories]);
         }
         else if($form->isSubmitted() && !$form->isValid())
         {
             $this->addFlash('error', 'Erreur lors de l\'ajout de l\'article !');
         }
 
-        return $this->render('ajouter-article.html.twig', ['marques' => $this->marques, 'categories' => $this->categories, 
+        return $this->render('/articles/ajouter-article.html.twig', ['marques' => $this->marques, 'categories' => $this->categories, 
                                                            'user' => $this->getUser(), 'form' => $form->createView(),
-                                                           'articlesFavoris' => $this->articlesFavoris,
-                                                           'panier' => $this->panier]); 
+                                                           'articlesFavoris' => $this->articlesFavoris,'panier' => $this->panier]); 
     }
 
     /**
